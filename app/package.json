@@ -1,0 +1,20 @@
+{
+  "scripts": {
+    "build": "webpack"
+  },
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "esbuild": "0.18.17",
+    "process": "^0.11.10",
+    "serve": "^14.2.0",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
+    "socket.io-p2p": "^2.2.0",
+    "stream-browserify": "^3.0.0",
+    "webpack": "^5.88.2",
+    "webrtc-adapter": "^8.2.3"
+  },
+  "devDependencies": {
+    "webpack-cli": "^5.1.4"
+  }
+}
