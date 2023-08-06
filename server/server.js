@@ -34,7 +34,6 @@ function setup() {
       console.log("Assigned new user %s", userID);
     }
 
-    // TODO: Remove mapping when socket goes dark.
     next();
   });
 
