@@ -1,4 +1,4 @@
-import {FormEvent, useEffect, useRef, useState} from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import signallingSocket from "./signallingSocket";
 
 async function connectToPeer(recipientUsername: string) {
@@ -13,7 +13,7 @@ export default function Connect() {
     event.preventDefault();
     if (recipientUsernameRef.current?.value === undefined) return;
     connectToPeer(recipientUsernameRef.current.value);
-  }
+  };
 
   useEffect(() => {
     signallingSocket.connect();
@@ -32,7 +32,11 @@ export default function Connect() {
       <p>Your username is {username}</p>
       <form onSubmit={handleConnect}>
         <label>Chat with:</label>
-        <input ref={recipientUsernameRef} type="text" name="recipientUsername" />
+        <input
+          ref={recipientUsernameRef}
+          type="text"
+          name="recipientUsername"
+        />
         <button type="submit">Connect</button>
       </form>
     </div>
