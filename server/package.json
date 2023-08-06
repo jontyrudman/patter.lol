@@ -1,8 +1,17 @@
 {
-  "type": "module",
   "dependencies": {
+    "@types/node": "^20.4.8",
     "moniker": "^0.1.2",
     "socket.io": "^4.7.2",
-    "socket.io-p2p-server": "^1.2.0"
+    "typescript": "^5.1.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1"
+  },
+  "scripts": {
+    "build": "rm -rf ./build && tsc",
+    "start": "npm run build && node build/server.js",
+    "start:dev": "npx nodemon"
   }
 }
