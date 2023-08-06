@@ -18,7 +18,8 @@ type ConnectedUsers = {
 };
 
 const connectedUsers = <ConnectedUsers>{};
-let getSocketById: ((id: string) => UserSocket) | (() => undefined) = () => undefined;
+let getSocketById: ((id: string) => UserSocket) | (() => undefined) = () =>
+  undefined;
 
 function uniqueName() {
   let name = Moniker.choose();
@@ -110,7 +111,7 @@ function forwardToRecipient(
 
     // If there's a match to the recipient, send to all sockets open for them
     socketIds.forEach((sid) => {
-      getSocketById(sid)?.emit(event, { from: initiatorSocket.username, data });
+      getSocketById(sid)?.emit(event, { senderUsername: initiatorSocket.username, ...data });
     });
 
     // Success, return early
@@ -122,20 +123,39 @@ function forwardToRecipient(
 }
 
 function registerRtcHandshakeListener(socket: UserSocket) {
-  socket.on("rtc-offer", (recipientUsername: string) => {
+  socket.on("rtc-offer", ({ recipientUsername, offer }) => {
+    console.log("Offer from %s to %s", socket.username, recipientUsername);
+    forwardToRecipient(socket, recipientUsername, "rtc-offer", {
+      senderUsername: socket.username,
+      offer,
+    });
+  });
+
+  socket.on("rtc-answer", ({ recipientUsername, answer }) => {
+    console.log("Answer from %s to %s", socket.username, recipientUsername);
+    forwardToRecipient(socket, recipientUsername, "rtc-answer", {
+      senderUsername: socket.username,
+      answer,
+    });
+  });
+
+  socket.on("rtc-ice-candidate", ({ recipientUsername, iceCandidate }) => {
     console.log(
-      "Trying to connect %s to %s",
+      "ICE candidate from %s to %s",
       socket.username,
       recipientUsername
     );
-    forwardToRecipient(socket, recipientUsername, "rtc-offer", { offer: "" });
+    forwardToRecipient(socket, recipientUsername, "rtc-ice-candidate", {
+      senderUsername: socket.username,
+      iceCandidate,
+    });
   });
 }
 
 function setup() {
   const io = new Server(5000, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: "http://192.168.1.149:4173",
     },
   });
 
