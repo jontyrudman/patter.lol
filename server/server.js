@@ -5,6 +5,7 @@ import Moniker from "moniker";
 // TODO: Convert to TS
 
 const connectedUsers = {};
+let getSocketById = () => {};
 
 function uniqueName() {
   let name = Moniker.choose();
@@ -79,12 +80,47 @@ function registerOnDisconnectListener(socket) {
   });
 }
 
+function forwardToRecipient(initiatorSocket, recipientUsername, event, data) {
+  console.log(
+    `Attempting to forward data from ${initiatorSocket.username} to ${recipientUsername}...`
+  );
+
+  // Look for the recipient in `connectedUsers` and forward data to them
+  for (const { username, sockets } of Object.values(connectedUsers)) {
+    if (recipientUsername !== username) continue;
+
+    // If there's a match to the recipient, send to all sockets open for them
+    sockets.forEach((sid) => {
+      getSocketById(sid).emit(event, { from: initiatorSocket.username, data });
+    });
+
+    // Success, return early
+    return;
+  }
+
+  console.log(`${recipientUsername} not found`);
+  initiatorSocket.emit("rtc-peer-not-found", recipientUsername);
+}
+
+function registerRtcHandshakeListener(socket) {
+  socket.on("rtc-offer", (recipientUsername) => {
+    console.log(
+      "Trying to connect %s to %s",
+      socket.username,
+      recipientUsername
+    );
+    forwardToRecipient(socket, recipientUsername, "rtc-offer", { offer: "" });
+  });
+}
+
 function setup() {
   const io = new Server(5000, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: "http://localhost:5173",
     },
   });
+
+  getSocketById = (id) => io.sockets.sockets.get(id);
 
   io.use(usernameMiddleware);
 
@@ -92,6 +128,7 @@ function setup() {
     onConnect(socket);
 
     registerOnDisconnectListener(socket);
+    registerRtcHandshakeListener(socket);
   });
 }
 
