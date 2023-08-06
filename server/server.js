@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import Moniker from "moniker";
 
 // TODO: Limit number of duplicate connections
+// TODO: Convert to TS
 
 const connectedUsers = {};
 
@@ -32,10 +33,13 @@ function setup() {
         socket.userID
       );
       // Count duplicate connections so we know when to clear after all disconnected
-      connectedUsers[socket.handshake.address].count += 1;
+      connectedUsers[socket.handshake.address].sockets.push(socket.id);
     } else {
       const userID = uniqueName();
-      connectedUsers[socket.handshake.address] = { count: 1, userID };
+      connectedUsers[socket.handshake.address] = {
+        sockets: [socket.id],
+        userID,
+      };
       socket.userID = userID;
       console.log("Assigned new user %s", userID);
     }
@@ -53,8 +57,8 @@ function setup() {
     // Send a name to the client
     socket.emit("assign-name", socket.userID);
 
-    // Decrement the count of the connection or remove if there is only one
-    socket.on("disconnect", async () => {
+    // Remove the socket from connectedUsers or remove user if there is only one
+    socket.on("disconnect", () => {
       console.log(
         "%s (%s) disconnected",
         socket.userID,
@@ -62,7 +66,7 @@ function setup() {
       );
 
       // When all sockets with a given userID are disconnected, remove from connectedUsers
-      if (connectedUsers[socket.handshake.address].count <= 1) {
+      if (connectedUsers[socket.handshake.address].sockets.length <= 1) {
         console.log(
           "All connections from %s disconnected, removing user %s",
           socket.handshake.address,
@@ -70,7 +74,12 @@ function setup() {
         );
         delete connectedUsers[socket.handshake.address];
       } else {
-        connectedUsers[socket.handshake.address].count -= 1;
+        const i = connectedUsers[socket.handshake.address].sockets.indexOf(
+          socket.id
+        );
+        if (i !== -1) {
+          connectedUsers[socket.handshake.address].sockets.splice(i, 1);
+        }
       }
     });
   });
