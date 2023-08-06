@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import Moniker from "moniker";
 
+// TODO: Limit number of duplicate connections
+
 const connectedUsers = {};
 
 function uniqueName() {
@@ -47,8 +49,11 @@ function setup() {
       socket.id,
       socket.userID
     );
+
+    // Send a name to the client
     socket.emit("assign-name", socket.userID);
 
+    // Decrement the count of the connection or remove if there is only one
     socket.on("disconnect", async () => {
       console.log(
         "%s (%s) disconnected",
