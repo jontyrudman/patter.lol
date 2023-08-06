@@ -1,4 +1,4 @@
-import {Server} from "socket.io";
+import { Server } from "socket.io";
 import Moniker from "moniker";
 
 const connectedUsers = {};
@@ -13,7 +13,7 @@ function setup() {
   const io = new Server(5000, {
     cors: {
       origin: "http://localhost:3000",
-    }
+    },
   });
 
   io.use((socket, next) => {
@@ -24,12 +24,16 @@ function setup() {
      */
     if (socket.handshake.address in connectedUsers) {
       socket.userID = connectedUsers[socket.handshake.address];
-      console.log("User already found for address %s %s", socket.handshake.address, socket.userID);
+      console.log(
+        "User already found for address %s %s",
+        socket.handshake.address,
+        socket.userID
+      );
       // Count duplicate connections so we know when to clear after all disconnected
       connectedUsers[socket.handshake.address].count += 1;
     } else {
       const userID = uniqueName();
-      connectedUsers[socket.handshake.address] = {count: 1, userID};
+      connectedUsers[socket.handshake.address] = { count: 1, userID };
       socket.userID = userID;
       console.log("Assigned new user %s", userID);
     }
@@ -38,15 +42,27 @@ function setup() {
   });
 
   io.on("connection", (socket) => {
-    console.log('connection made to socket id %s with user ID %s', socket.id, socket.userID);
+    console.log(
+      "connection made to socket id %s with user ID %s",
+      socket.id,
+      socket.userID
+    );
     socket.emit("assign-name", socket.userID);
 
     socket.on("disconnect", async () => {
-      console.log("%s (%s) disconnected", socket.userID, socket.handshake.address);
+      console.log(
+        "%s (%s) disconnected",
+        socket.userID,
+        socket.handshake.address
+      );
 
       // When all sockets with a given userID are disconnected, remove from connectedUsers
       if (connectedUsers[socket.handshake.address].count <= 1) {
-        console.log("All connections from %s disconnected, removing user %s", socket.handshake.address, socket.userID);
+        console.log(
+          "All connections from %s disconnected, removing user %s",
+          socket.handshake.address,
+          socket.userID
+        );
         delete connectedUsers[socket.handshake.address];
       } else {
         connectedUsers[socket.handshake.address].count -= 1;
