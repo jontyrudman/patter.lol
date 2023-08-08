@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const signallingSocket = io(import.meta.env.VITE_SIGNALLING_SERVER, {
+const signallingSocket = io("ws://" + import.meta.env.VITE_SIGNALLING_SERVER, {
   autoConnect: false,
 });
 
