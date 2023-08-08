@@ -1,3 +1,4 @@
+require('dotenv').config();
 import { Server, Socket } from "socket.io";
 // @ts-ignore
 import Moniker from "moniker";
@@ -8,13 +9,10 @@ interface UserSocket extends Socket {
   username: string;
 }
 
-type ConnectedUser = {
-  username: string;
-  socketIds: Array<string>;
-};
+type SocketId = string;
 
 type ConnectedUsers = {
-  [ipAddr: string]: ConnectedUser;
+  [username: string]: SocketId;
 };
 
 const connectedUsers = <ConnectedUsers>{};
@@ -34,24 +32,10 @@ function uniqueName() {
  */
 function usernameMiddleware(socket: Socket, next: Function) {
   const userSocket = <UserSocket>socket;
-  if (userSocket.handshake.address in connectedUsers) {
-    userSocket.username = connectedUsers[userSocket.handshake.address].username;
-    console.log(
-      "User already found for address %s %s",
-      userSocket.handshake.address,
-      userSocket.username
-    );
-    // Count duplicate connections so we know when to clear after all disconnected
-    connectedUsers[userSocket.handshake.address].socketIds.push(userSocket.id);
-  } else {
-    const username = uniqueName();
-    connectedUsers[userSocket.handshake.address] = {
-      socketIds: [userSocket.id],
-      username,
-    };
-    userSocket.username = username;
-    console.log("Assigned new user %s", username);
-  }
+  const username = uniqueName();
+  connectedUsers[username] = userSocket.id;
+  userSocket.username = username;
+  console.log("Assigned new user %s", username);
 
   next();
 }
@@ -76,22 +60,7 @@ function registerOnDisconnectListener(socket: UserSocket) {
       socket.handshake.address
     );
 
-    // When all sockets with a given username are disconnected, remove from connectedUsers
-    if (connectedUsers[socket.handshake.address].socketIds.length <= 1) {
-      console.log(
-        "All connections from %s disconnected, removing user %s",
-        socket.handshake.address,
-        socket.username
-      );
-      delete connectedUsers[socket.handshake.address];
-    } else {
-      const i = connectedUsers[socket.handshake.address].socketIds.indexOf(
-        socket.id
-      );
-      if (i !== -1) {
-        connectedUsers[socket.handshake.address].socketIds.splice(i, 1);
-      }
-    }
+    delete connectedUsers[socket.username];
   });
 }
 
@@ -105,21 +74,12 @@ function forwardToRecipient(
     `Attempting to forward data from ${initiatorSocket.username} to ${recipientUsername}...`
   );
 
-  // Look for the recipient in `connectedUsers` and forward data to them
-  for (const { username, socketIds } of Object.values(connectedUsers)) {
-    if (recipientUsername !== username) continue;
-
-    // If there's a match to the recipient, send to all sockets open for them
-    socketIds.forEach((sid) => {
-      getSocketById(sid)?.emit(event, { senderUsername: initiatorSocket.username, ...data });
-    });
-
-    // Success, return early
-    return;
+  if (recipientUsername in connectedUsers) {
+    getSocketById(connectedUsers[recipientUsername])?.emit(event, { senderUsername: initiatorSocket.username, ...data });
+  } else {
+    console.log(`${recipientUsername} not found`);
+    initiatorSocket.emit("rtc-peer-not-found", recipientUsername);
   }
-
-  console.log(`${recipientUsername} not found`);
-  initiatorSocket.emit("rtc-peer-not-found", recipientUsername);
 }
 
 function registerRtcHandshakeListener(socket: UserSocket) {
@@ -153,9 +113,9 @@ function registerRtcHandshakeListener(socket: UserSocket) {
 }
 
 function setup() {
-  const io = new Server(5000, {
+  const io = new Server(Number.parseInt(process.env.PORT ?? "5000"), {
     cors: {
-      origin: "http://192.168.1.149:4173",
+      origin: process.env.FRONTEND_ORIGIN,
     },
   });
 
