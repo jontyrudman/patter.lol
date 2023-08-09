@@ -12,18 +12,25 @@ signallingSocket.on("rtc-answer", async ({ senderUsername, answer }) => {
   if (senderUsername in activeChatConnections) {
     await activeChatConnections[senderUsername].acceptAnswer(answer);
   } else {
-    console.log(`Failed to accept answer. No connection open with ${senderUsername}.`);
+    console.log(
+      `Failed to accept answer. No connection open with ${senderUsername}.`
+    );
   }
 });
 
 // Listener for receiving an ICE candidate and adding it to the connection
-signallingSocket.on("rtc-ice-candidate", async ({ senderUsername, iceCandidate }) => {
-  if (senderUsername in activeChatConnections) {
-    await activeChatConnections[senderUsername].addIceCandidate(iceCandidate);
-  } else {
-    console.log(`Failed to accept ICE candidate. No connection open with ${senderUsername}.`);
+signallingSocket.on(
+  "rtc-icecandidate",
+  async ({ senderUsername, iceCandidate }) => {
+    if (senderUsername in activeChatConnections) {
+      await activeChatConnections[senderUsername].addIceCandidate(iceCandidate);
+    } else {
+      console.log(
+        `Failed to accept ICE candidate. No connection open with ${senderUsername}.`
+      );
+    }
   }
-});
+);
 
 async function getIceServers(username: string) {
   const response = await fetch(
@@ -41,11 +48,23 @@ async function getIceServers(username: string) {
   };
 }
 
-export class ChatConnection {
+type ListenerRecord<T, S> = {
+  [K in keyof T]: (this: S, ev: T[K]) => void;
+};
+
+class ChatConnection {
   peerConnection: RTCPeerConnection | undefined;
   dataChannel: RTCDataChannel | undefined;
   myUsername: string;
   recipientUsername: string;
+  peerConnectionListeners: ListenerRecord<
+    RTCPeerConnectionEventMap,
+    RTCPeerConnection
+  >[] = [];
+  dataChannelListeners: ListenerRecord<
+    RTCDataChannelEventMap,
+    RTCDataChannel
+  >[] = [];
 
   constructor(myUsername: string, recipientUsername: string) {
     if (recipientUsername in activeChatConnections)
@@ -58,34 +77,85 @@ export class ChatConnection {
   async #createPeerConnection() {
     const config = await getIceServers(this.myUsername);
     this.peerConnection = new RTCPeerConnection(config);
+    // Add waiting event listeners
+    for (const obj of this.peerConnectionListeners) {
+      const event = <keyof RTCPeerConnectionEventMap>Object.keys(obj)[0];
+      const listener = <EventListenerOrEventListenerObject>(
+        Object.values(obj)[0]
+      );
+      this.peerConnection.addEventListener(event, listener);
+    }
+
+    this.peerConnection.addEventListener("datachannel", (event) => {
+      this.#setDataChannel(event.channel);
+    });
 
     // Add event listener to our RTC connection for when local ICE candidates pop up
     this.peerConnection.addEventListener("icecandidate", (event) => {
       if (event.candidate) {
-        signallingSocket.emit("rtc-ice-candidate", {
+        signallingSocket.emit("rtc-icecandidate", {
           recipientUsername: this.recipientUsername,
           iceCandidate: event.candidate,
         });
       }
     });
+  }
 
-    this.peerConnection.addEventListener("connectionstatechange", () => {
-      if (this.peerConnection === undefined) return;
-      if (this.peerConnection.connectionState === "connected") {
-        console.log("Connected");
-      }
-    });
+  #setDataChannel(dataChannel: RTCDataChannel) {
+    this.dataChannel = dataChannel;
 
-    this.peerConnection.addEventListener("datachannel", (event) => {
-      this.dataChannel = event.channel;
-    });
+    // Add waiting event listeners
+    for (const obj of this.dataChannelListeners) {
+      const event = <keyof RTCDataChannelEventMap>Object.keys(obj)[0];
+      const listener = <EventListenerOrEventListenerObject>(
+        Object.values(obj)[0]
+      );
+      this.dataChannel.addEventListener(event, listener);
+    }
+  }
+
+  onPeerConnectionEvent<K extends keyof RTCPeerConnectionEventMap>(
+    type: K,
+    listener: (this: RTCPeerConnection, ev: RTCPeerConnectionEventMap[K]) => any
+  ): void {
+    if (this.peerConnection === undefined) {
+      this.peerConnectionListeners.push({ [type]: listener } as ListenerRecord<
+        RTCPeerConnectionEventMap,
+        RTCPeerConnection
+      >);
+      return;
+    }
+
+    this.peerConnection.addEventListener(type, listener);
+  }
+
+  onDataChannelEvent<K extends keyof RTCDataChannelEventMap>(
+    type: K,
+    listener: (this: RTCDataChannel, ev: RTCDataChannelEventMap[K]) => any
+  ): void {
+    if (this.dataChannel === undefined) {
+      this.dataChannelListeners.push({ [type]: listener } as ListenerRecord<
+        RTCDataChannelEventMap,
+        RTCDataChannel
+      >);
+      return;
+    }
+
+    this.dataChannel.addEventListener(type, listener);
+  }
+
+  async sendChatMessage(message: string) {
+    if (this.dataChannel === undefined)
+      throw Error("No dataChannel to send message");
+
+    this.dataChannel.send(message);
   }
 
   async sendOffer() {
     await this.#createPeerConnection();
     if (this.peerConnection === undefined) throw Error("Can't send offer");
 
-    this.dataChannel = this.peerConnection.createDataChannel("datachannel");
+    this.#setDataChannel(this.peerConnection.createDataChannel("datachannel"));
 
     const offer = await this.peerConnection.createOffer();
     await this.peerConnection.setLocalDescription(offer);
@@ -117,10 +187,11 @@ export class ChatConnection {
   async addIceCandidate(iceCandidate: RTCIceCandidateInit) {
     let count = 0;
     while (this.peerConnection === undefined && count < 5) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       count += 1;
     }
-    if (this.peerConnection === undefined) throw Error("Can't receive ICE candidate");
+    if (this.peerConnection === undefined)
+      throw Error("Can't receive ICE candidate");
 
     try {
       await this.peerConnection.addIceCandidate(iceCandidate);
@@ -129,3 +200,5 @@ export class ChatConnection {
     }
   }
 }
+
+export { activeChatConnections, ChatConnection };
