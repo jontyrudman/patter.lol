@@ -5,7 +5,6 @@ import adapter from "webrtc-adapter";
 
 let rtcConfiguration = {};
 let peerConnection: RTCPeerConnection | undefined;
-// @ts-ignore
 let dataChannel: RTCDataChannel | undefined;
 
 async function createPeerConnection(recipientUsername: string) {
@@ -30,12 +29,20 @@ async function createPeerConnection(recipientUsername: string) {
 
   peerConnection.addEventListener("datachannel", (event) => {
     dataChannel = event.channel;
+
+    dataChannel.addEventListener('message', event => {
+      console.log(`New message: ${event.data}`);
+    });
   });
 }
 
 async function sendOffer(recipientUsername: string) {
   if (peerConnection === undefined) throw Error("Can't send offer");
   dataChannel = peerConnection.createDataChannel("datachannel");
+
+  dataChannel.addEventListener('message', event => {
+    console.log(`New message: ${event.data}`);
+  });
 
   const offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
