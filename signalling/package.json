@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "rm -rf ./build && tsc",
-    "start": "npm run build && node build/server.js",
+    "start": "npm run build && node build/main.js",
     "start:dev": "npx nodemon"
   }
 }
