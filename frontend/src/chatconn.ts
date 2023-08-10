@@ -32,6 +32,13 @@ signallingSocket.on(
   }
 );
 
+signallingSocket.on("rtc-peer-not-found", (username) => {
+  console.log(`Peer ${username} not found`);
+  if (username in activeChatConnections) {
+    activeChatConnections[username].triggerPeerNotFound();
+  }
+});
+
 async function getIceServers(username: string) {
   const response = await fetch(
     `http://${import.meta.env.VITE_SIGNALLING_SERVER}/get-ice-servers`,
@@ -57,15 +64,16 @@ class ChatConnection {
   dataChannel: RTCDataChannel | undefined;
   myUsername: string;
   recipientUsername: string;
-  peerConnectionListeners: ListenerRecord<
+  #peerConnectionListeners: ListenerRecord<
     RTCPeerConnectionEventMap,
     RTCPeerConnection
   >[] = [];
-  dataChannelListeners: ListenerRecord<
+  #dataChannelListeners: ListenerRecord<
     RTCDataChannelEventMap,
     RTCDataChannel
   >[] = [];
-
+  #peerNotFoundListeners: Function[] = [];
+  
   constructor(myUsername: string, recipientUsername: string) {
     if (recipientUsername in activeChatConnections)
       throw Error(`Chat with ${recipientUsername} already exists!`);
@@ -78,7 +86,7 @@ class ChatConnection {
     const config = await getIceServers(this.myUsername);
     this.peerConnection = new RTCPeerConnection(config);
     // Add waiting event listeners
-    for (const obj of this.peerConnectionListeners) {
+    for (const obj of this.#peerConnectionListeners) {
       const event = <keyof RTCPeerConnectionEventMap>Object.keys(obj)[0];
       const listener = <EventListenerOrEventListenerObject>(
         Object.values(obj)[0]
@@ -105,7 +113,7 @@ class ChatConnection {
     this.dataChannel = dataChannel;
 
     // Add waiting event listeners
-    for (const obj of this.dataChannelListeners) {
+    for (const obj of this.#dataChannelListeners) {
       const event = <keyof RTCDataChannelEventMap>Object.keys(obj)[0];
       const listener = <EventListenerOrEventListenerObject>(
         Object.values(obj)[0]
@@ -114,12 +122,24 @@ class ChatConnection {
     }
   }
 
+  triggerPeerNotFound() {
+    for (const fn of this.#peerNotFoundListeners) {
+      fn();
+    }
+    this.dataChannel?.close();
+    this.peerConnection?.close();
+  }
+
+  onPeerNotFound(listener: Function) {
+    this.#peerNotFoundListeners.push(listener);
+  }
+
   onPeerConnectionEvent<K extends keyof RTCPeerConnectionEventMap>(
     type: K,
     listener: (this: RTCPeerConnection, ev: RTCPeerConnectionEventMap[K]) => any
   ): void {
     if (this.peerConnection === undefined) {
-      this.peerConnectionListeners.push({ [type]: listener } as ListenerRecord<
+      this.#peerConnectionListeners.push({ [type]: listener } as ListenerRecord<
         RTCPeerConnectionEventMap,
         RTCPeerConnection
       >);
@@ -134,7 +154,7 @@ class ChatConnection {
     listener: (this: RTCDataChannel, ev: RTCDataChannelEventMap[K]) => any
   ): void {
     if (this.dataChannel === undefined) {
-      this.dataChannelListeners.push({ [type]: listener } as ListenerRecord<
+      this.#dataChannelListeners.push({ [type]: listener } as ListenerRecord<
         RTCDataChannelEventMap,
         RTCDataChannel
       >);
@@ -142,6 +162,20 @@ class ChatConnection {
     }
 
     this.dataChannel.addEventListener(type, listener);
+  }
+
+  onReady(listener: Function): void {
+    this.onDataChannelEvent("open", () => {
+      listener();
+    });
+  }
+  
+  // TODO: onClose
+
+  onMessageReceived(listener: (message: string) => void): void {
+    this.onDataChannelEvent("message", (event) => {
+      listener(event.data);
+    });
   }
 
   async sendChatMessage(message: string) {

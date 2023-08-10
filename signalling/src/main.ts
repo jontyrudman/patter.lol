@@ -121,13 +121,13 @@ function registerRtcHandshakeListener(socket: UserSocket) {
     });
   });
 
-  socket.on("rtc-ice-candidate", ({ recipientUsername, iceCandidate }) => {
+  socket.on("rtc-icecandidate", ({ recipientUsername, iceCandidate }) => {
     console.log(
       "ICE candidate from %s to %s",
       socket.username,
       recipientUsername
     );
-    forwardToRecipient(socket, recipientUsername, "rtc-ice-candidate", {
+    forwardToRecipient(socket, recipientUsername, "rtc-icecandidate", {
       senderUsername: socket.username,
       iceCandidate,
     });

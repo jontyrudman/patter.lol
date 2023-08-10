@@ -1,8 +1,11 @@
+import { Chat } from "./chat";
 import "./App.css";
-import Connect from "./Connect";
+import { ChatProvider } from "./ChatContext";
 
 export default function App() {
   return (
-    <Connect />
+    <ChatProvider>
+      <Chat />
+    </ChatProvider>
   );
 }
