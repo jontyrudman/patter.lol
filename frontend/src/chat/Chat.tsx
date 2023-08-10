@@ -17,7 +17,7 @@ export default function Chat() {
       throw Error("Can't create connection when username doesn't exist!");
     const chat = new ChatConnection(username, recipientUsername);
 
-    chat.onReady(() => {
+    chat.onDataChannelEvent("open", () => {
       console.log("ChatConnection ready");
       chatDispatch({ type: "new-conversation", recipientUsername });
       setLoadingConn(false);

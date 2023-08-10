@@ -83,67 +83,7 @@ export default class ChatConnection {
     }
   }
 
-  triggerPeerNotFound() {
-    for (const fn of this.#peerNotFoundListeners) {
-      fn();
-    }
-    this.dataChannel?.close();
-    this.peerConnection?.close();
-  }
-
-  onPeerNotFound(listener: Function) {
-    this.#peerNotFoundListeners.push(listener);
-  }
-
-  onPeerConnectionEvent<K extends keyof RTCPeerConnectionEventMap>(
-    type: K,
-    listener: (this: RTCPeerConnection, ev: RTCPeerConnectionEventMap[K]) => any
-  ): void {
-    if (this.peerConnection === undefined) {
-      this.#peerConnectionListeners.push({ [type]: listener } as ListenerRecord<
-        RTCPeerConnectionEventMap,
-        RTCPeerConnection
-      >);
-      return;
-    }
-
-    this.peerConnection.addEventListener(type, listener);
-  }
-
-  onDataChannelEvent<K extends keyof RTCDataChannelEventMap>(
-    type: K,
-    listener: (this: RTCDataChannel, ev: RTCDataChannelEventMap[K]) => any
-  ): void {
-    if (this.dataChannel === undefined) {
-      this.#dataChannelListeners.push({ [type]: listener } as ListenerRecord<
-        RTCDataChannelEventMap,
-        RTCDataChannel
-      >);
-      return;
-    }
-
-    this.dataChannel.addEventListener(type, listener);
-  }
-
-  onReady(listener: Function): void {
-    this.onDataChannelEvent("open", () => {
-      listener();
-    });
-  }
-  
-  onMessageReceived(listener: (message: string) => void): void {
-    this.onDataChannelEvent("message", (event) => {
-      listener(event.data);
-    });
-  }
-
-  async sendChatMessage(message: string) {
-    if (this.dataChannel === undefined)
-      throw Error("No dataChannel to send message");
-
-    this.dataChannel.send(message);
-  }
-
+  /* HANDSHAKE */
   async sendOffer() {
     await this.#createPeerConnection();
     if (this.peerConnection === undefined) throw Error("Can't send offer");
@@ -191,6 +131,64 @@ export default class ChatConnection {
     } catch (e) {
       console.error("Error adding received ice candidate", e);
     }
+  }
+
+  /* LISTENER-SETTERS and TRIGGERS */
+  #triggerPeerNotFound() {
+    for (const fn of this.#peerNotFoundListeners) {
+      fn();
+    }
+    // TODO: re-evaluate behaviour and whether to remove from the list
+    this.dataChannel?.close();
+    this.peerConnection?.close();
+  }
+
+  onPeerNotFound(listener: Function) {
+    this.#peerNotFoundListeners.push(listener);
+  }
+
+  onPeerConnectionEvent<K extends keyof RTCPeerConnectionEventMap>(
+    type: K,
+    listener: (this: RTCPeerConnection, ev: RTCPeerConnectionEventMap[K]) => any
+  ): void {
+    if (this.peerConnection === undefined) {
+      this.#peerConnectionListeners.push({ [type]: listener } as ListenerRecord<
+        RTCPeerConnectionEventMap,
+        RTCPeerConnection
+      >);
+      return;
+    }
+
+    this.peerConnection.addEventListener(type, listener);
+  }
+
+  onDataChannelEvent<K extends keyof RTCDataChannelEventMap>(
+    type: K,
+    listener: (this: RTCDataChannel, ev: RTCDataChannelEventMap[K]) => any
+  ): void {
+    if (this.dataChannel === undefined) {
+      this.#dataChannelListeners.push({ [type]: listener } as ListenerRecord<
+        RTCDataChannelEventMap,
+        RTCDataChannel
+      >);
+      return;
+    }
+
+    this.dataChannel.addEventListener(type, listener);
+  }
+
+  /* MESSAGES */
+  async sendMessage(message: string) {
+    if (this.dataChannel === undefined)
+      throw Error("No dataChannel to send message");
+
+    this.dataChannel.send(message);
+  }
+
+  onMessageReceived(listener: (message: string) => void): void {
+    this.onDataChannelEvent("message", (event) => {
+      listener(event.data);
+    });
   }
 
   static getChatConnectionByUsername(username: string) {
@@ -249,7 +247,7 @@ export default class ChatConnection {
     signallingSocket.on("rtc-peer-not-found", (username) => {
       console.log(`Peer ${username} not found`);
       if (username in ChatConnection.activeChatConnections) {
-        ChatConnection.activeChatConnections[username].triggerPeerNotFound();
+        ChatConnection.activeChatConnections[username].#triggerPeerNotFound();
       }
     });
   }

@@ -89,7 +89,7 @@ function chatReducer(
         timestamp: Date.now(),
       };
 
-      chatConnection.sendChatMessage(action.message);
+      chatConnection.sendMessage(action.message);
       newChats[action.recipientUsername].historyBuffer.push(outgoingMessage);
 
       return newChats;
