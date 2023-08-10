@@ -1,10 +1,8 @@
-import { useChatState } from "../ChatContext";
+import { useChatState, useChatDispatch } from "../context";
 import Connect from "./Connect";
 import Conversation from "./Conversation";
-import { ChatConnection } from "../chatconn";
-import { useChatDispatch } from "../ChatContext";
+import { ChatConnection, signallingSocket } from "../api";
 import { useEffect, useState } from "react";
-import signallingSocket from "../signallingSocket";
 
 export default function Chat() {
   const [username, setUsername] = useState();
@@ -30,7 +28,7 @@ export default function Chat() {
       setLoadingConn(false);
     });
 
-    chat.onMessageReceived((message) => {
+    chat.onMessageReceived((message: string) => {
       console.log(`Message received: ${message}`);
       chatDispatch({
         type: "message-received",

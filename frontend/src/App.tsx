@@ -1,6 +1,6 @@
 import { Chat } from "./chat";
 import "./App.css";
-import { ChatProvider } from "./ChatContext";
+import { ChatProvider } from "./context/ChatContext";
 
 export default function App() {
   return (

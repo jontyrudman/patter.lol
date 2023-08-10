@@ -2,64 +2,19 @@ import signallingSocket from "./signallingSocket";
 // @ts-ignore
 import adapter from "webrtc-adapter";
 
+// TODO: better errors and early return behaviours
+// TODO: teardown
+// TODO: onClose
+
 type ActiveChatConnections = {
   [recipientUsername: string]: ChatConnection;
 };
-const activeChatConnections: ActiveChatConnections = {};
-
-// Add answer event listener before we send an offer
-signallingSocket.on("rtc-answer", async ({ senderUsername, answer }) => {
-  if (senderUsername in activeChatConnections) {
-    await activeChatConnections[senderUsername].acceptAnswer(answer);
-  } else {
-    console.log(
-      `Failed to accept answer. No connection open with ${senderUsername}.`
-    );
-  }
-});
-
-// Listener for receiving an ICE candidate and adding it to the connection
-signallingSocket.on(
-  "rtc-icecandidate",
-  async ({ senderUsername, iceCandidate }) => {
-    if (senderUsername in activeChatConnections) {
-      await activeChatConnections[senderUsername].addIceCandidate(iceCandidate);
-    } else {
-      console.log(
-        `Failed to accept ICE candidate. No connection open with ${senderUsername}.`
-      );
-    }
-  }
-);
-
-signallingSocket.on("rtc-peer-not-found", (username) => {
-  console.log(`Peer ${username} not found`);
-  if (username in activeChatConnections) {
-    activeChatConnections[username].triggerPeerNotFound();
-  }
-});
-
-async function getIceServers(username: string) {
-  const response = await fetch(
-    `http://${import.meta.env.VITE_SIGNALLING_SERVER}/get-ice-servers`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username }),
-    }
-  );
-  const { iceServers } = await response.json();
-  console.log("Received ICE servers: %s", JSON.stringify(iceServers));
-  return {
-    iceServers,
-  };
-}
 
 type ListenerRecord<T, S> = {
   [K in keyof T]: (this: S, ev: T[K]) => void;
 };
 
-class ChatConnection {
+export default class ChatConnection {
   peerConnection: RTCPeerConnection | undefined;
   dataChannel: RTCDataChannel | undefined;
   myUsername: string;
@@ -73,19 +28,25 @@ class ChatConnection {
     RTCDataChannel
   >[] = [];
   #peerNotFoundListeners: Function[] = [];
+
+  static activeChatConnections: ActiveChatConnections = {};
+  static #preppedSignallingSocket = false;
   
   constructor(myUsername: string, recipientUsername: string) {
-    if (recipientUsername in activeChatConnections)
+    if (recipientUsername in ChatConnection.activeChatConnections)
       throw Error(`Chat with ${recipientUsername} already exists!`);
     this.recipientUsername = recipientUsername;
     this.myUsername = myUsername;
-    activeChatConnections[recipientUsername] = this;
+    ChatConnection.activeChatConnections[recipientUsername] = this;
+    ChatConnection.#setUpSignallingListeners();
   }
 
   async #createPeerConnection() {
-    const config = await getIceServers(this.myUsername);
+    const config = await ChatConnection.#getIceServers(this.myUsername);
     this.peerConnection = new RTCPeerConnection(config);
-    // Add waiting event listeners
+
+    /* Add pending event listeners that might have been added before the
+       peerConnection was set up */
     for (const obj of this.#peerConnectionListeners) {
       const event = <keyof RTCPeerConnectionEventMap>Object.keys(obj)[0];
       const listener = <EventListenerOrEventListenerObject>(
@@ -170,8 +131,6 @@ class ChatConnection {
     });
   }
   
-  // TODO: onClose
-
   onMessageReceived(listener: (message: string) => void): void {
     this.onDataChannelEvent("message", (event) => {
       listener(event.data);
@@ -218,7 +177,7 @@ class ChatConnection {
     await this.peerConnection.setRemoteDescription(remoteDesc);
   }
 
-  async addIceCandidate(iceCandidate: RTCIceCandidateInit) {
+  async #addIceCandidate(iceCandidate: RTCIceCandidateInit) {
     let count = 0;
     while (this.peerConnection === undefined && count < 5) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -233,6 +192,65 @@ class ChatConnection {
       console.error("Error adding received ice candidate", e);
     }
   }
-}
 
-export { activeChatConnections, ChatConnection };
+  static getChatConnectionByUsername(username: string) {
+    if (!(username in ChatConnection.activeChatConnections)) {
+      return undefined;
+    }
+    return ChatConnection.activeChatConnections[username];
+  };
+
+  static async #getIceServers(username: string) {
+    const response = await fetch(
+      `http://${import.meta.env.VITE_SIGNALLING_SERVER}/get-ice-servers`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      }
+    );
+    const { iceServers } = await response.json();
+    console.log("Received ICE servers: %s", JSON.stringify(iceServers));
+    return {
+      iceServers,
+    };
+  }
+
+  static #setUpSignallingListeners() {
+    // One-time setup
+    if (ChatConnection.#preppedSignallingSocket) return;
+    ChatConnection.#preppedSignallingSocket = true;
+
+    // Add answer event listener before we send an offer
+    signallingSocket.on("rtc-answer", async ({ senderUsername, answer }) => {
+      if (senderUsername in ChatConnection.activeChatConnections) {
+        await ChatConnection.activeChatConnections[senderUsername].acceptAnswer(answer);
+      } else {
+        console.log(
+          `Failed to accept answer. No connection open with ${senderUsername}.`
+        );
+      }
+    });
+
+    // Listener for receiving an ICE candidate and adding it to the connection
+    signallingSocket.on(
+      "rtc-icecandidate",
+      async ({ senderUsername, iceCandidate }) => {
+        if (senderUsername in ChatConnection.activeChatConnections) {
+          await ChatConnection.activeChatConnections[senderUsername].#addIceCandidate(iceCandidate);
+        } else {
+          console.log(
+            `Failed to accept ICE candidate. No connection open with ${senderUsername}.`
+          );
+        }
+      }
+    );
+
+    signallingSocket.on("rtc-peer-not-found", (username) => {
+      console.log(`Peer ${username} not found`);
+      if (username in ChatConnection.activeChatConnections) {
+        ChatConnection.activeChatConnections[username].triggerPeerNotFound();
+      }
+    });
+  }
+}

@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { ChatMessage, useChatDispatch, useChatState } from "../ChatContext";
+import { ChatMessage, useChatDispatch, useChatState } from "../context";
 
 type ConversationProps = {
   conversationName: string;
