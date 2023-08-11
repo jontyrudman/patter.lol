@@ -2,6 +2,9 @@ import signallingSocket from "./signallingSocket";
 // @ts-ignore
 import adapter from "webrtc-adapter";
 
+const TLS = import.meta.env.VITE_TLS === "true";
+const SIGNALLING_SERVER = import.meta.env.VITE_SIGNALLING_SERVER;
+
 // TODO: better errors and early return behaviours
 // TODO: teardown
 // TODO: onClose
@@ -31,7 +34,7 @@ export default class ChatConnection {
 
   static activeChatConnections: ActiveChatConnections = {};
   static #preppedSignallingSocket = false;
-  
+
   constructor(myUsername: string, recipientUsername: string) {
     if (recipientUsername in ChatConnection.activeChatConnections)
       throw Error(`Chat with ${recipientUsername} already exists!`);
@@ -196,11 +199,11 @@ export default class ChatConnection {
       return undefined;
     }
     return ChatConnection.activeChatConnections[username];
-  };
+  }
 
   static async #getIceServers(username: string) {
     const response = await fetch(
-      `http://${import.meta.env.VITE_SIGNALLING_SERVER}/get-ice-servers`,
+      `${TLS ? "https" : "http"}://${SIGNALLING_SERVER}/get-ice-servers`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -222,7 +225,9 @@ export default class ChatConnection {
     // Add answer event listener before we send an offer
     signallingSocket.on("rtc-answer", async ({ senderUsername, answer }) => {
       if (senderUsername in ChatConnection.activeChatConnections) {
-        await ChatConnection.activeChatConnections[senderUsername].acceptAnswer(answer);
+        await ChatConnection.activeChatConnections[senderUsername].acceptAnswer(
+          answer
+        );
       } else {
         console.log(
           `Failed to accept answer. No connection open with ${senderUsername}.`
@@ -235,7 +240,9 @@ export default class ChatConnection {
       "rtc-icecandidate",
       async ({ senderUsername, iceCandidate }) => {
         if (senderUsername in ChatConnection.activeChatConnections) {
-          await ChatConnection.activeChatConnections[senderUsername].#addIceCandidate(iceCandidate);
+          await ChatConnection.activeChatConnections[
+            senderUsername
+          ].#addIceCandidate(iceCandidate);
         } else {
           console.log(
             `Failed to accept ICE candidate. No connection open with ${senderUsername}.`

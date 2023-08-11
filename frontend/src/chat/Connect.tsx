@@ -1,4 +1,5 @@
 import { FormEvent, useRef } from "react";
+import styles from "./Connect.module.css";
 
 type ConnectProps = {
   username: string | undefined;
@@ -18,9 +19,8 @@ export default function Connect({ username, sendOffer }: ConnectProps) {
   };
 
   return (
-    <div>
-      <p>Your username is {username}</p>
-      <form onSubmit={handleConnect}>
+    <form onSubmit={handleConnect}>
+      <div className={styles.ConnectForm}>
         <label>Chat with:</label>
         <input
           ref={recipientUsernameRef}
@@ -28,7 +28,7 @@ export default function Connect({ username, sendOffer }: ConnectProps) {
           name="recipientUsername"
         />
         <button type="submit">Connect</button>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }

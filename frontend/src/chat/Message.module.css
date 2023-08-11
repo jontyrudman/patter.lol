@@ -1,0 +1,7 @@
+.Message {
+  padding: 0 1rem;
+  margin: 1rem 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 2fr 8fr 2fr;
+}

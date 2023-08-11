@@ -147,21 +147,25 @@ function getICEServers(name: string): Array<Object> {
 
   const hmac = crypto.createHmac("sha1", env.TURN_SECRET);
   const username = [unixExpiryTimestamp, name].join(":");
+  console.log("Secret is %s", env.TURN_SECRET);
 
-  hmac.setEncoding('utf-8');
+  hmac.setEncoding('base64');
   hmac.write(username);
   hmac.end();
   const credential = hmac.read();
 
+  // return [
+  //   {
+  //     username: "efODQV5HMIUY26994C",
+  //     urls: "turn:relay1.expressturn.com:3478",
+  //     credential: "R7g6wGPBYC21gIOl",
+  //   },
+  // ];
+
   return [
-    {
-      urls: "stun:" + env.TURN_DOMAIN + ":3478",
-    },
-    {
-      username: username,
-      urls: "turns:" + env.TURN_DOMAIN + ":443",
-      credential: credential,
-    },
+    // {
+    //   urls: "stun:" + env.TURN_DOMAIN + ":3478",
+    // },
     {
       username: username,
       urls: "turn:" + env.TURN_DOMAIN + ":3478",

@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { ChatMessage, useChatDispatch, useChatState } from "../context";
+import styles from "./Conversation.module.css";
+import Message from "./Message";
 
 type ConversationProps = {
   conversationName: string;
@@ -15,6 +17,7 @@ export default function Conversation({ conversationName }: ConversationProps) {
     console.log(`Submitting ${message}`);
     e.preventDefault();
 
+    setMessage("");
     chatDispatch({
       type: "send-message",
       recipientUsername: conversationName,
@@ -28,18 +31,14 @@ export default function Conversation({ conversationName }: ConversationProps) {
 
   return (
     <>
-      <div
-        style={{ width: "500px", height: "500px", border: "1px solid white", overflow: 'auto' }}
-      >
+      <div className={styles.ConversationBox}>
         {messageHistory.map(({ senderUsername, message: m, timestamp }) => {
           return (
-            <p>
-              {senderUsername}: {m} - {timestamp}
-            </p>
+            <Message senderUsername={senderUsername} message={m} timestamp={timestamp} />
           );
         })}
       </div>
-      <form onSubmit={submitHandler}>
+      <form onSubmit={submitHandler} className={styles.sendForm}>
         <input
           type="text"
           value={message}

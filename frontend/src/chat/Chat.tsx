@@ -8,6 +8,7 @@ export default function Chat() {
   const [username, setUsername] = useState();
   const [showConversation, setShowConversation] = useState(false);
   const [recipientUsername, setRecipientUsername] = useState("");
+  // @ts-ignore
   const [loadingConn, setLoadingConn] = useState(false);
   const chatState = useChatState();
   const chatDispatch = useChatDispatch();
@@ -72,7 +73,14 @@ export default function Chat() {
     console.log(JSON.stringify(chatState));
   }, [chatState]);
 
-  if (showConversation) return <Conversation conversationName={recipientUsername} />;
-
-  return <Connect username={username} sendOffer={sendOffer} />;
+  return (
+    <>
+      <h4>Your username is {username}</h4>
+      {showConversation ? (
+        <Conversation conversationName={recipientUsername} />
+      ) : (
+        <Connect username={username} sendOffer={sendOffer} />
+      )}
+    </>
+  );
 }

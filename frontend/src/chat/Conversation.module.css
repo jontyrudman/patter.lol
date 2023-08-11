@@ -1,0 +1,14 @@
+.ConversationBox {
+  width: 100%;
+  height: 500px;
+  border: 1px solid white;
+  overflow: auto;
+}
+
+.sendForm {
+  margin: 1rem 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 10fr 2fr;
+  gap: 1rem;
+}

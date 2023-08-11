@@ -1,0 +1,7 @@
+#App {
+  max-width: 100%;
+  width: 50rem;
+  height: 100%;
+  display: grid;
+  justify-items: center;
+}
