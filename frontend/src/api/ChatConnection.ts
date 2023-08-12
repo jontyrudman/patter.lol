@@ -1,9 +1,7 @@
+import env from "../env";
 import signallingSocket from "./signallingSocket";
 // @ts-ignore
 import adapter from "webrtc-adapter";
-
-const TLS = import.meta.env.VITE_TLS === "true";
-const SIGNALLING_SERVER = import.meta.env.VITE_SIGNALLING_SERVER;
 
 // TODO: better errors and early return behaviours
 // TODO: teardown
@@ -203,7 +201,7 @@ export default class ChatConnection {
 
   static async #getIceServers(username: string) {
     const response = await fetch(
-      `${TLS ? "https" : "http"}://${SIGNALLING_SERVER}/get-ice-servers`,
+      `${env.SIGNALLING_HTTP}/get-ice-servers`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

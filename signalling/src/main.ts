@@ -1,15 +1,24 @@
 import { createServer } from "http";
 import express from "express";
 import cors from "cors";
-import crypto from "crypto";
 import { Server, Socket } from "socket.io";
 // @ts-ignore
 import Moniker from "moniker";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 
-dotenv.config();
+// Only use .env files in dev mode
+if (process.env.NODE_ENV === "development") {
+  dotenv.config();
+  dotenv.config({ path: ".secrets.env" });
+}
 
+// TODO: Error handling for missing env vars
+// TODO: Error handling generally
+// TODO: Log levels
 // TODO: Limit number of duplicate connections
+// TODO: Rate limit socket
+// TODO: Rate limit ICE server endpoint hard
 
 interface UserSocket extends Socket {
   username: string;
@@ -21,6 +30,10 @@ type ConnectedUsers = {
   [username: string]: SocketId;
 };
 
+type IceServers =
+  | [{ urls: string } | { urls: string; username: string; credential: string }]
+  | undefined;
+
 const connectedUsers = <ConnectedUsers>{};
 const expressApp = express();
 const httpServer = createServer(expressApp);
@@ -30,12 +43,7 @@ let getSocketById: ((id: string) => UserSocket) | (() => undefined) = () =>
 const env = {
   FRONTEND_ORIGIN: process.env.FRONTEND_ORIGIN,
   PORT: parseInt(process.env.PORT ?? "5000"),
-  TURN_DOMAIN: process.env.TURN_DOMAIN,
-  TURN_SECRET: process.env.TURN_SECRET ?? "",
-  // Default to a day
-  TURN_SECRET_LIFETIME_SECONDS: parseInt(
-    process.env.TURN_SECRET_LIFETIME_SECONDS ?? "86400"
-  ),
+  METERED_API_KEY: process.env.METERED_API_KEY,
 };
 
 function uniqueName() {
@@ -135,55 +143,42 @@ function registerRtcHandshakeListener(socket: UserSocket) {
 }
 
 /**
- * Makes an array of ICE servers by generating a timestamped username and
- * a credential in the form of an HMAC.
- *
- * The secret used for the HMAC is shared between the TURN server and this one
- * and the timestamped username is written into the hash.
+ * Get an array of ICE servers from Metered
  */
-function getICEServers(name: string): Array<Object> {
-  const unixExpiryTimestamp =
-    parseInt((Date.now() / 1000).toString()) + env.TURN_SECRET_LIFETIME_SECONDS;
+async function getIceServers(): Promise<IceServers> {
+  const response = await fetch(
+    `https://patter.metered.live/api/v1/turn/credentials?apiKey=${env.METERED_API_KEY}`
+  );
 
-  const hmac = crypto.createHmac("sha1", env.TURN_SECRET);
-  const username = [unixExpiryTimestamp, name].join(":");
-  console.log("Secret is %s", env.TURN_SECRET);
+  let iceServers: IceServers;
 
-  hmac.setEncoding('base64');
-  hmac.write(username);
-  hmac.end();
-  const credential = hmac.read();
-
-  // return [
-  //   {
-  //     username: "efODQV5HMIUY26994C",
-  //     urls: "turn:relay1.expressturn.com:3478",
-  //     credential: "R7g6wGPBYC21gIOl",
-  //   },
-  // ];
-
-  return [
-    // {
-    //   urls: "stun:" + env.TURN_DOMAIN + ":3478",
-    // },
-    {
-      username: username,
-      urls: "turn:" + env.TURN_DOMAIN + ":3478",
-      credential: credential,
-    },
-  ];
+  try {
+    iceServers = await (response.json() as Promise<IceServers>);
+    // Remove port 80 TURN servers
+    iceServers = <IceServers>iceServers?.filter((elem) => {
+      if (elem.urls.includes("turn:") && elem.urls.includes(":80"))
+        return false;
+      return true;
+    });
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+  return iceServers;
 }
 
 function setupHTTPServer() {
-  expressApp.use(cors({
-    origin: env.FRONTEND_ORIGIN,
-  }));
+  expressApp.use(
+    cors({
+      origin: env.FRONTEND_ORIGIN,
+    })
+  );
   expressApp.use(express.json());
-  expressApp.post("/get-ice-servers", (req, res) => {
-    console.log(req.body);
-    const iceServers = getICEServers(req.body.username);
+
+  expressApp.post("/get-ice-servers", async (_, res) => {
+    const iceServers = await getIceServers();
     console.log("Sending ICE servers: %s", JSON.stringify(iceServers));
-    res.json({"iceServers": iceServers});
+    res.json({ iceServers: iceServers });
   });
 }
 

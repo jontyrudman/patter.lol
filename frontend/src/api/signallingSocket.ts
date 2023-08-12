@@ -1,10 +1,7 @@
 import { io } from "socket.io-client";
+import env from "../env";
 
-const TLS = (import.meta.env.VITE_TLS == "true");
-const SIGNALLING_SERVER = import.meta.env.VITE_SIGNALLING_SERVER;
-console.log(import.meta.env.VITE_TLS, SIGNALLING_SERVER);
-
-const signallingSocket = io(`${TLS ? "wss" : "ws"}://${SIGNALLING_SERVER}`, {
+const signallingSocket = io(env.SIGNALLING_WS, {
   autoConnect: false,
 });
 

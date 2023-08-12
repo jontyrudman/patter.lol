@@ -1,0 +1,19 @@
+services:
+  signalling:
+    build: ./signalling
+    env_file:
+      - ./signalling/.env
+      - ./signalling/.secrets.env
+    environment:
+      # Overwrite environment variables
+      - "FRONTEND_ORIGIN=http://localhost:8043"
+    ports:
+      - "5000:5000"
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - "VITE_SIGNALLING_HTTP=http://localhost:5000"
+        - "VITE_SIGNALLING_WS=ws://localhost:5000"
+    ports:
+      - "8043:8043"
