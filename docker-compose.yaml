@@ -1,3 +1,5 @@
+# For testing the Dockerfiles easily
+
 services:
   signalling:
     build: ./signalling

@@ -1,7 +1,7 @@
 FROM node:18-alpine as build
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci --omit=dev
 COPY . .
 
 ARG VITE_SIGNALLING_HTTP
@@ -13,5 +13,7 @@ RUN npm run build
 
 FROM pierrezemb/gostatic
 COPY --from=build ./dist/ /srv/http/
+
+EXPOSE 8043
 
 CMD ["-fallback", "/index.html"]

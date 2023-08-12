@@ -3,6 +3,8 @@ import signallingSocket from "./signallingSocket";
 // @ts-ignore
 import adapter from "webrtc-adapter";
 
+// TODO: Try to revive chat if both parties still on chat page
+// TODO: enforce max message length
 // TODO: better errors and early return behaviours
 // TODO: teardown
 // TODO: onClose

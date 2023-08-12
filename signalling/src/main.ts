@@ -13,6 +13,7 @@ if (process.env.NODE_ENV === "development") {
   dotenv.config({ path: ".secrets.env" });
 }
 
+// TODO: enforce max message length
 // TODO: Error handling for missing env vars
 // TODO: Error handling generally
 // TODO: Log levels

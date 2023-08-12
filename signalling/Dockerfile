@@ -2,8 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /usr/app
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci --omit=dev
 COPY . .
-RUN rm .env
+
+EXPOSE 8080
 
 CMD ["npm", "start"]
