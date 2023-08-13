@@ -4,6 +4,7 @@ import Conversation from "./Conversation";
 import { ChatConnection, signallingSocket } from "../api";
 import { useEffect, useState } from "react";
 import styles from "./Chat.module.css";
+import LoadingDots from "../components/LoadingDots";
 
 export default function Chat() {
   const [username, setUsername] = useState();
@@ -71,7 +72,10 @@ export default function Chat() {
 
   return (
     <div className={styles.Chat}>
-      <div className={styles.usernameHeadline}>Your username is <b>{username}</b></div>
+      <div className={styles.usernameHeadline}>
+        Your username is{" "}
+        {username === undefined ? <LoadingDots /> : <b>{username}</b>}
+      </div>
       {showConversation ? (
         <Conversation conversationName={recipientUsername} />
       ) : (

@@ -3,7 +3,6 @@ import styles from "./Connect.module.css";
 import Button from "../components/Button";
 import TextInput from "../components/TextInput";
 import Form from "../components/Form";
-import LoadingDots from "../components/LoadingDots";
 
 type ConnectProps = {
   username: string | undefined;
