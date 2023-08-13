@@ -1,10 +1,10 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { ChatMessage, useChatDispatch, useChatState } from "../context";
+import { ChatMessage, useChatDispatch, useChatState } from "../../context";
 import styles from "./Conversation.module.css";
 import Message from "./Message";
-import Button from "../components/Button";
-import TextInput from "../components/TextInput";
-import Form from "../components/Form";
+import Button from "../../components/Button";
+import TextInput from "../../components/TextInput";
+import Form from "../../components/Form";
 
 type ConversationProps = {
   conversationName: string;

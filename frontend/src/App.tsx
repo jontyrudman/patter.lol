@@ -1,4 +1,4 @@
-import { Chat } from "./chat";
+import { Chat } from "./pages/chat";
 import { ChatProvider } from "./context/ChatContext";
 import styles from "./App.module.css";
 

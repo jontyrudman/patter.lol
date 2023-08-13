@@ -1,10 +1,10 @@
-import { useChatDispatch } from "../context";
+import { useChatDispatch } from "../../context";
 import Connect from "./Connect";
 import Conversation from "./Conversation";
-import { ChatConnection, signallingSocket } from "../api";
+import { ChatConnection, signallingSocket } from "../../api";
 import { useEffect, useState } from "react";
 import styles from "./Chat.module.css";
-import LoadingDots from "../components/LoadingDots";
+import LoadingDots from "../../components/LoadingDots";
 
 export default function Chat() {
   const [username, setUsername] = useState();
