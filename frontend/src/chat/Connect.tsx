@@ -2,6 +2,7 @@ import { FormEvent, useRef } from "react";
 import styles from "./Connect.module.css";
 import Button from "../components/Button";
 import TextInput from "../components/TextInput";
+import Form from "../components/Form";
 
 type ConnectProps = {
   username: string | undefined;
@@ -21,16 +22,14 @@ export default function Connect({ username, sendOffer }: ConnectProps) {
   };
 
   return (
-    <form onSubmit={handleConnect}>
-      <div className={styles.ConnectForm}>
-        <label>Who do you want to talk to?</label>
-        <TextInput
-          ref={recipientUsernameRef}
-          type="text"
-          name="recipientUsername"
-        />
-        <Button type="submit">Connect</Button>
-      </div>
-    </form>
+    <Form onSubmit={handleConnect} className={styles.ConnectForm}>
+      <label>Who do you want to talk to?</label>
+      <TextInput
+        ref={recipientUsernameRef}
+        type="text"
+        name="recipientUsername"
+      />
+      <Button type="submit">Connect</Button>
+    </Form>
   );
 }
