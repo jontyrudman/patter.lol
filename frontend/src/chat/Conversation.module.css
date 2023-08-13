@@ -12,7 +12,6 @@
   border: 2px solid var(--border-color);
   border-radius: .925em;
   overflow: scroll;
-  padding: 0 1rem;
   box-sizing: border-box;
 }
 

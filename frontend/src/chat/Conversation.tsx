@@ -35,6 +35,7 @@ export default function Conversation({ conversationName }: ConversationProps) {
   return (
     <div className={styles.ConversationContainer}>
       <div className={styles.ConversationHistory}>
+        <p>You're talking to <b>{conversationName}</b></p>
         {messageHistory.map(({ senderUsername, message: m, timestamp }) => {
           return (
             <Message
