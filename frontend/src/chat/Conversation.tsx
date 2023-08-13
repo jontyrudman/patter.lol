@@ -1,7 +1,10 @@
-import { FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { ChatMessage, useChatDispatch, useChatState } from "../context";
 import styles from "./Conversation.module.css";
 import Message from "./Message";
+import Button from "../components/Button";
+import TextInput from "../components/TextInput";
+import Form from "../components/Form";
 
 type ConversationProps = {
   conversationName: string;
@@ -30,22 +33,29 @@ export default function Conversation({ conversationName }: ConversationProps) {
   }, [chatState]);
 
   return (
-    <>
-      <div className={styles.ConversationBox}>
+    <div className={styles.ConversationContainer}>
+      <div className={styles.ConversationHistory}>
         {messageHistory.map(({ senderUsername, message: m, timestamp }) => {
           return (
-            <Message senderUsername={senderUsername} message={m} timestamp={timestamp} />
+            <Message
+              key={`msg_${senderUsername}_${timestamp}`}
+              senderUsername={senderUsername}
+              message={m}
+              timestamp={timestamp}
+            />
           );
         })}
       </div>
-      <form onSubmit={submitHandler} className={styles.sendForm}>
-        <input
+      <Form onSubmit={submitHandler} className={styles.sendForm}>
+        <TextInput
           type="text"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setMessage(e.target.value)
+          }
         />
-        <button type="submit">Send</button>
-      </form>
-    </>
+        <Button type="submit">Send</Button>
+      </Form>
+    </div>
   );
 }

@@ -1,0 +1,7 @@
+@font-face {
+    font-family: 'Space Mono';
+    src: local('Space Mono Bold Italic'), local('SpaceMono-BoldItalic'),
+        url('SpaceMono-BoldItalic.woff2') format('woff2');
+    font-weight: bold;
+    font-style: italic;
+}

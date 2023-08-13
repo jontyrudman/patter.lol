@@ -10,7 +10,7 @@ primary_region = "lhr"
   dockerfile = "Dockerfile"
 
 [env]
-  FRONTEND_ORIGIN = "https://patterfrontend-4969.fly.dev"
+  FRONTEND_ORIGIN = "https://patter.lol"
   PORT = "8080"
   # METERED_API_KEY is set using `fly secrets`
 

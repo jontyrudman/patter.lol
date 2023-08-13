@@ -1,0 +1,21 @@
+.Button {
+  font-weight: 600;
+  color: var(--button-text-color);
+  background-color: var(--button-color);
+  border: 2px solid var(--border-color);
+  border-radius: .925em;
+  padding: .5em 1em;
+  box-shadow: .5em .5em var(--button-shadow-color);
+  cursor: pointer;
+}
+
+.Button:hover, .Button:focus {
+  outline: 2px solid var(--border-color);
+}
+
+.Button:active, .Button.active {
+  transform: translate(.25em, .25em);
+  box-shadow: .25em .25em var(--border-focus-color);
+  border: 2px solid var(--border-focus-color);
+  outline: 2px solid var(--border-focus-color);
+}

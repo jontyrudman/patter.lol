@@ -13,7 +13,7 @@ export default function Message({senderUsername, message, timestamp}: MessagePro
     <div className={styles.Message}>
       <div><b>{senderUsername}:</b></div>
       <div>{message}</div>
-      <div>{datetime.toLocaleDateString()} {datetime.toLocaleTimeString()}</div>
+      <div style={{ textAlign: "right" }}>{datetime.toLocaleDateString()} {datetime.toLocaleTimeString()}</div>
     </div>
   );
 }

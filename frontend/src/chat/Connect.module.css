@@ -1,5 +1,6 @@
 .ConnectForm {
   display: grid;
-  grid-auto-flow: column;
+  grid-auto-flow: row;
   gap: 1rem;
+  place-items: center;
 }

@@ -5,7 +5,7 @@ import styles from "./App.module.css";
 export default function App() {
   return (
     <div id={styles.App}>
-      <h1>patter.lol</h1>
+      <div className={styles.siteName}>patter.lol</div>
       <ChatProvider>
         <Chat />
       </ChatProvider>

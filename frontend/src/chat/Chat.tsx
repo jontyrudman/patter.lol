@@ -1,8 +1,9 @@
-import { useChatState, useChatDispatch } from "../context";
+import { useChatDispatch } from "../context";
 import Connect from "./Connect";
 import Conversation from "./Conversation";
 import { ChatConnection, signallingSocket } from "../api";
 import { useEffect, useState } from "react";
+import styles from "./Chat.module.css";
 
 export default function Chat() {
   const [username, setUsername] = useState();
@@ -10,7 +11,6 @@ export default function Chat() {
   const [recipientUsername, setRecipientUsername] = useState("");
   // @ts-ignore
   const [loadingConn, setLoadingConn] = useState(false);
-  const chatState = useChatState();
   const chatDispatch = useChatDispatch();
 
   const newChatConnection = (recipientUsername: string) => {
@@ -69,18 +69,14 @@ export default function Chat() {
     };
   }, []);
 
-  useEffect(() => {
-    console.log(JSON.stringify(chatState));
-  }, [chatState]);
-
   return (
-    <>
-      <h4>Your username is {username}</h4>
+    <div className={styles.Chat}>
+      <div className={styles.usernameHeadline}>Your username is <b>{username}</b></div>
       {showConversation ? (
         <Conversation conversationName={recipientUsername} />
       ) : (
         <Connect username={username} sendOffer={sendOffer} />
       )}
-    </>
+    </div>
   );
 }
