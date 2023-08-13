@@ -1,8 +1,9 @@
-import { FormEvent, useRef } from "react";
+import { FormEvent, useRef, useState } from "react";
 import styles from "./Connect.module.css";
 import Button from "../components/Button";
 import TextInput from "../components/TextInput";
 import Form from "../components/Form";
+import LoadingDots from "../components/LoadingDots";
 
 type ConnectProps = {
   username: string | undefined;
@@ -10,10 +11,13 @@ type ConnectProps = {
 };
 
 export default function Connect({ username, sendOffer }: ConnectProps) {
+  const [connecting, setConnecting] = useState(false);
   const recipientUsernameRef = useRef<HTMLInputElement>(null);
+  const connectButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleConnect = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setConnecting(true);
 
     const recipientUsername = recipientUsernameRef.current?.value;
     if (recipientUsername === undefined || username === undefined) return;
@@ -29,7 +33,14 @@ export default function Connect({ username, sendOffer }: ConnectProps) {
         type="text"
         name="recipientUsername"
       />
-      <Button type="submit">Connect</Button>
+      <Button
+        loadingText="Connecting"
+        isLoading={connecting}
+        type="submit"
+        ref={connectButtonRef}
+      >
+        Connect
+      </Button>
     </Form>
   );
 }

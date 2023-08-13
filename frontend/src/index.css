@@ -25,10 +25,14 @@
   --input-color: black;
   --input-text-color: lightgrey;
   --input-shadow-color: lightgrey;
+  --disabled-color: #9a9a9a;
+  
   --app-width: 100vw;
   --app-height: 100vh;
   /* Account for UI elements on mobile */
   --app-height: 100svh;
+
+  --mobile-width: 60rem;
 
   color: var(--text-color);
   background-color: var(--bg-color);

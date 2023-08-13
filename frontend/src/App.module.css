@@ -1,8 +1,16 @@
 #App {
-  max-width: 50rem;
+  min-width: 20rem;
+  width: 50rem;
   text-align: center;
   padding: 0 1rem;
   height: var(--app-height);
+  box-sizing: border-box;
+}
+
+@media screen and (max-width: 60rem) {
+  #App {
+    width: var(--app-width);
+  }
 }
 
 .siteName {
