@@ -1,5 +1,7 @@
 .ConversationContainer {
-  height: calc(100% - 4.5rem - 4rem - 1.5rem - 2rem);
+  /* Adjust for siteName height.
+   * usernameHeadline top margin will collapse */
+  height: calc(100% - 1.5rem - 2rem);
   display: grid;
   grid-template-rows: 1fr auto;
   width: 100%;
