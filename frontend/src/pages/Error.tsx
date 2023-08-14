@@ -1,6 +1,6 @@
 type ErrorProps = {
   children: string;
-}
+};
 
 export default function Error({ children }: ErrorProps) {
   return (
@@ -8,12 +8,10 @@ export default function Error({ children }: ErrorProps) {
       <b>Oops! An error has occurred.</b>
       {children !== undefined && (
         <>
-        <br />
-        <code>
-          {children}
-        </code>
+          <br />
+          <code>{children}</code>
         </>
       )}
     </div>
-  )
-};
+  );
+}
