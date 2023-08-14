@@ -1,13 +1,9 @@
-type DialogProps = {
+import { PropsWithChildren } from "react";
+
+interface DialogProps extends PropsWithChildren {
   open: boolean;
-  setOpen: (open: boolean) => void;
-  children: any;
 }
 
 export default function Dialog({ open, children }: DialogProps) {
-  return (
-    <dialog open={open}>
-      {children}
-    </dialog>
-  );
+  return <dialog open={open}>{children}</dialog>;
 }

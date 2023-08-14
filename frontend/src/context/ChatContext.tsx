@@ -1,10 +1,11 @@
-import {
-  Dispatch,
-  createContext,
-  useContext,
-  useReducer,
-} from "react";
+import { Dispatch, createContext, useContext, useReducer } from "react";
 import { chat } from "../api";
+
+export type ChatRequest = {
+  requestorUsername: string;
+  accept: () => void;
+  reject: () => void;
+};
 
 export type ChatConversation = {
   recipientUsername: string;
@@ -18,13 +19,10 @@ export type ChatMessage = {
 };
 
 type ChatContextState = {
-  [conversationName: string]: ChatConversation;
-};
-
-type ChatDispatchActionMap = {
-  "new-conversation": { type: "new-conversation", recipientUsername: string };
-  "message-received": { type: "message-received"; message: string; senderUsername: string };
-  "send-message": { type: "send-message"; message: string; recipientUsername: string };
+  conversations: {
+    [recipientName: string]: ChatConversation;
+  };
+  requests: { [requestorName: string]: ChatRequest };
 };
 
 type ChatDispatchActionType = keyof ChatDispatchActionMap;
@@ -33,7 +31,8 @@ type ChatDispatchAction<K extends ChatDispatchActionType> =
 
 type ChatContextDispatch = Dispatch<ChatDispatchAction<ChatDispatchActionType>>;
 
-const chatContext = createContext<ChatContextState>({});
+const initialChats: ChatContextState = { conversations: {}, requests: {} };
+const chatContext = createContext<ChatContextState>(initialChats);
 const chatDispatchContext = createContext<ChatContextDispatch>(() => {});
 
 export function useChatState() {
@@ -44,8 +43,22 @@ export function useChatDispatch() {
   return useContext(chatDispatchContext);
 }
 
-const initialChats: ChatContextState = {};
 
+type ChatDispatchActionMap = {
+  "new-conversation": { type: "new-conversation"; recipientUsername: string };
+  "receive-message": {
+    type: "receive-message";
+    message: string;
+    senderUsername: string;
+  };
+  "send-message": {
+    type: "send-message";
+    message: string;
+    recipientUsername: string;
+  };
+  "new-request": { type: "new-request" } & ChatRequest;
+  "remove-request": { type: "remove-request", requestorUsername: string};
+};
 function chatReducer(
   chats: ChatContextState,
   action: ChatDispatchAction<ChatDispatchActionType>
@@ -54,15 +67,17 @@ function chatReducer(
     case "new-conversation": {
       console.log(`Opening a new connection with ${action.recipientUsername}`);
       const newChats = { ...chats };
-      newChats[action.recipientUsername] = {
+      newChats.conversations[action.recipientUsername] = {
         recipientUsername: action.recipientUsername,
         historyBuffer: [],
       };
       return newChats;
     }
-    case "message-received": {
-      console.log(`new message from ${action.senderUsername}: ${action.message}`);
-      if (!(action.senderUsername in chats)) {
+    case "receive-message": {
+      console.log(
+        `new message from ${action.senderUsername}: ${action.message}`
+      );
+      if (!(action.senderUsername in chats.conversations)) {
         console.log(`No conversation open with ${action.senderUsername}`);
       }
       const newChats = { ...chats };
@@ -71,14 +86,17 @@ function chatReducer(
         message: action.message,
         timestamp: Date.now(),
       };
-      const conversation = chats[action.senderUsername];
+      const conversation = chats.conversations[action.senderUsername];
       conversation.historyBuffer.push(incomingMessage);
-      newChats[action.senderUsername] = conversation;
+      newChats.conversations[action.senderUsername] = conversation;
 
       return newChats;
     }
     case "send-message": {
-      if (!(action.recipientUsername in chat.connections) || !(action.recipientUsername in chats)) {
+      if (
+        !(action.recipientUsername in chat.connections) ||
+        !(action.recipientUsername in chats.conversations)
+      ) {
         console.log(`No connection open to ${action.recipientUsername}`);
       }
       const chatConnection = chat.connections[action.recipientUsername];
@@ -90,8 +108,30 @@ function chatReducer(
       };
 
       chatConnection.dataChannel?.send(action.message);
-      newChats[action.recipientUsername].historyBuffer.push(outgoingMessage);
+      newChats.conversations[action.recipientUsername].historyBuffer.push(
+        outgoingMessage
+      );
 
+      return newChats;
+    }
+    case "new-request": {
+      console.log(
+        `Logging new chat request from ${action.requestorUsername}...`
+      );
+      const newChats = { ...chats };
+      newChats.requests[action.requestorUsername] = ({
+        requestorUsername: action.requestorUsername,
+        accept: action.accept,
+        reject: action.reject,
+      });
+      return newChats;
+    }
+    case "remove-request": {
+      console.log(
+        `Removing chat request from ${action.requestorUsername}...`
+      );
+      const newChats = { ...chats };
+      delete newChats.requests[action.requestorUsername];
       return newChats;
     }
   }

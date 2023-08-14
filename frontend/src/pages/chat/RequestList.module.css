@@ -1,0 +1,15 @@
+.RequestList {
+  display: grid;
+  grid-auto-flow: row;
+  gap: 1rem;
+  margin: 0 0 2rem 0;
+}
+
+.request {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  gap: 1rem;
+  align-items: center;
+  justify-items: center;
+  justify-content: center;
+}

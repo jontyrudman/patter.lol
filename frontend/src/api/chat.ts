@@ -48,6 +48,7 @@ signallingSocket.on("rtc-offer", async ({ senderUsername, offer }) => {
   if (senderUsername in connections)
     console.error(`Connection already open for peer ${senderUsername}`);
 
+  iceCandidateQueue[senderUsername] = [];
   // Run callback from onOffer
   if (offerCallback === null) return;
   offerCallback(senderUsername, offer);
@@ -121,6 +122,8 @@ export async function sendOffer({
     chatConn.peerConnection.createDataChannel("datachannel");
   chatConn.dataChannelCreatedCallback(chatConn);
 
+  iceCandidateQueue[recipientUsername] = [];
+
   // Send the offer
   const offer = await chatConn.peerConnection.createOffer();
   await chatConn.peerConnection.setLocalDescription(offer);
@@ -153,7 +156,6 @@ export async function acceptOffer({
   onClose,
 }: AcceptOfferProps): Promise<ChatConnection> {
   console.log(`Accepting offer from ${senderUsername}...`);
-  iceCandidateQueue[senderUsername] = [];
   const chatConn = await createChatConnection({
     peerUsername: senderUsername,
     onDataChannelCreated,

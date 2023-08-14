@@ -13,6 +13,7 @@ export default function Connect({ username, sendOffer }: ConnectProps) {
   const [connecting, setConnecting] = useState(false);
   const recipientUsernameRef = useRef<HTMLInputElement>(null);
   const connectButtonRef = useRef<HTMLButtonElement>(null);
+  // TODO: Add a timeout for connection request and a cancellable requesting... view
 
   const handleConnect = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
