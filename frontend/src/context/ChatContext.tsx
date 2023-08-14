@@ -74,7 +74,6 @@ function chatReducer(
       const conversation = chats[action.senderUsername];
       conversation.historyBuffer.push(incomingMessage);
       newChats[action.senderUsername] = conversation;
-      console.log(newChats);
 
       return newChats;
     }

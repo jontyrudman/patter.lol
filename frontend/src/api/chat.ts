@@ -79,7 +79,6 @@ signallingSocket.on("rtc-answer", async ({ senderUsername, answer }) => {
 signallingSocket.on(
   "rtc-icecandidate",
   async ({ senderUsername, iceCandidate }) => {
-    console.log({ ...chatConnections });
     if (username === null) throw Error("Username not set");
     if (senderUsername in chatConnections) {
       chatConnections[senderUsername].peerConnection.addIceCandidate(
