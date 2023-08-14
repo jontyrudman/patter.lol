@@ -4,7 +4,7 @@ import {
   useContext,
   useReducer,
 } from "react";
-import { ChatConnection } from "../api";
+import { chat } from "../api";
 
 export type ChatConversation = {
   recipientUsername: string;
@@ -52,6 +52,7 @@ function chatReducer(
 ): ChatContextState {
   switch (action.type) {
     case "new-conversation": {
+      console.log(`Opening a new connection with ${action.recipientUsername}`);
       const newChats = { ...chats };
       newChats[action.recipientUsername] = {
         recipientUsername: action.recipientUsername,
@@ -78,18 +79,18 @@ function chatReducer(
       return newChats;
     }
     case "send-message": {
-      if (!(action.recipientUsername in ChatConnection.activeChatConnections) || !(action.recipientUsername in chats)) {
+      if (!(action.recipientUsername in chat.chatConnections) || !(action.recipientUsername in chats)) {
         console.log(`No connection open to ${action.recipientUsername}`);
       }
-      const chatConnection = ChatConnection.activeChatConnections[action.recipientUsername];
+      const chatConnection = chat.chatConnections[action.recipientUsername];
       const newChats = { ...chats };
       const outgoingMessage: ChatMessage = {
-        senderUsername: chatConnection.myUsername,
+        senderUsername: chatConnection.username,
         message: action.message,
         timestamp: Date.now(),
       };
 
-      chatConnection.sendMessage(action.message);
+      chatConnection.dataChannel?.send(action.message);
       newChats[action.recipientUsername].historyBuffer.push(outgoingMessage);
 
       return newChats;

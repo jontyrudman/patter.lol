@@ -1,2 +1,2 @@
-export { default as ChatConnection } from "./ChatConnection";
+export * as chat from "./chat";
 export { default as signallingSocket } from "./signallingSocket";

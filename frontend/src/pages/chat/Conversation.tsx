@@ -29,7 +29,7 @@ export default function Conversation({ conversationName }: ConversationProps) {
   };
 
   useEffect(() => {
-    setMessageHistory(chatState[conversationName].historyBuffer);
+    setMessageHistory(chatState[conversationName]?.historyBuffer ?? []);
   }, [chatState]);
 
   return (

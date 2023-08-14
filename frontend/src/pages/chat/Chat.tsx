@@ -1,7 +1,7 @@
 import { useChatDispatch } from "../../context";
 import Connect from "./Connect";
 import Conversation from "./Conversation";
-import { ChatConnection, signallingSocket } from "../../api";
+import { chat, signallingSocket } from "../../api";
 import { useEffect, useState } from "react";
 import styles from "./Chat.module.css";
 import LoadingDots from "../../components/LoadingDots";
@@ -14,29 +14,41 @@ export default function Chat() {
   const [loadingConn, setLoadingConn] = useState(false);
   const chatDispatch = useChatDispatch();
 
-  const newChatConnection = (recipientUsername: string) => {
-    if (username === undefined)
-      throw Error("Can't create connection when username doesn't exist!");
-    const chat = new ChatConnection(username, recipientUsername);
+  const setUpDataChannelListeners = (chatConn: chat.ChatConnection) => {
+    if (chatConn.dataChannel === null) throw Error("Data channel not ready");
 
-    chat.onDataChannelEvent("open", () => {
-      console.log("ChatConnection ready");
-      chatDispatch({ type: "new-conversation", recipientUsername });
+    chatConn.dataChannel.addEventListener("open", () => {
+      console.log("datachannel open");
+      chatDispatch({
+        type: "new-conversation",
+        recipientUsername: chatConn.peerUsername,
+      });
       setLoadingConn(false);
       setShowConversation(true);
     });
 
-    chat.onPeerNotFound(() => {
-      setLoadingConn(false);
-    });
-
-    chat.onMessageReceived((message: string) => {
-      console.log(`Message received: ${message}`);
+    chatConn.dataChannel.addEventListener("message", (e) => {
+      console.log(`Message received: ${e.data}`);
       chatDispatch({
         type: "message-received",
-        message: message,
-        senderUsername: chat.recipientUsername,
+        message: e.data,
+        senderUsername: chatConn.peerUsername,
       });
+    });
+  };
+
+  const sendOffer = (recipientUsername: string) => {
+    setLoadingConn(true);
+
+    chat.sendOffer({
+      recipientUsername,
+      onAnswer: (conn) => {
+        console.log(`Received answer from ${conn.peerUsername}`);
+        setUpDataChannelListeners(conn);
+      },
+      onDataChannelCreated: (conn) => {
+        setUpDataChannelListeners(conn);
+      },
     });
 
     setRecipientUsername(recipientUsername);
@@ -44,22 +56,21 @@ export default function Chat() {
     return chat;
   };
 
-  const sendOffer = (recipientUsername: string) => {
-    setLoadingConn(true);
-    const chat = newChatConnection(recipientUsername);
-    chat.sendOffer();
-  };
-
   // Listener for being assigned a name
   signallingSocket.on("assign-name", (name) => {
     setUsername(name);
   });
 
-  // Listener for receiving an offer and sending an answer
-  signallingSocket.on("rtc-offer", async ({ senderUsername, offer }) => {
-    if (username === undefined) return;
-    const chat = newChatConnection(senderUsername);
-    await chat.acceptOffer(offer);
+  chat.onOffer(async (senderUsername, offer) => {
+    setRecipientUsername(senderUsername);
+    console.log(`Received offer from ${senderUsername}`);
+    await chat.acceptOffer({
+      offer,
+      senderUsername,
+      onDataChannelCreated: (conn) => {
+        setUpDataChannelListeners(conn);
+      },
+    });
   });
 
   useEffect(() => {
