@@ -3,8 +3,8 @@ import env from "../env";
 // @ts-ignore
 import adapter from "webrtc-adapter";
 
-type ChatConnectionCloseCallback = () => void;
-type ChatConnectionAnswerCallback = (
+type CloseCallback = () => void;
+type AnswerCallback = (
   chatConnection: ChatConnection,
   answer: RTCSessionDescriptionInit
 ) => void;
@@ -15,8 +15,8 @@ export type ChatConnection = {
   peerUsername: string;
   peerConnection: RTCPeerConnection;
   dataChannel: RTCDataChannel | null;
-  answerCallback?: ChatConnectionAnswerCallback;
-  closeCallback?: ChatConnectionCloseCallback;
+  answerCallback?: AnswerCallback;
+  closeCallback?: CloseCallback;
   dataChannelCreatedCallback: DataChannelCreatedCallback;
   close: () => void;
 };
@@ -41,11 +41,11 @@ signallingSocket.on("assign-name", (name) => {
 // For when we receive candidates before a ChatConnection has been created
 const iceCandidateQueue: { [peerUsername: string]: RTCIceCandidateInit[] } = {};
 
-export const chatConnections: { [peerUsername: string]: ChatConnection } = {};
+export const connections: { [peerUsername: string]: ChatConnection } = {};
 
 signallingSocket.on("rtc-offer", async ({ senderUsername, offer }) => {
   if (username === null) throw Error("Username not set");
-  if (senderUsername in chatConnections)
+  if (senderUsername in connections)
     console.error(`Connection already open for peer ${senderUsername}`);
 
   // Run callback from onOffer
@@ -57,8 +57,8 @@ signallingSocket.on("rtc-offer", async ({ senderUsername, offer }) => {
 signallingSocket.on("rtc-answer", async ({ senderUsername, answer }) => {
   if (username === null) throw Error("Username not set");
 
-  if (senderUsername in chatConnections) {
-    const chatConn = chatConnections[senderUsername];
+  if (senderUsername in connections) {
+    const chatConn = connections[senderUsername];
 
     if (chatConn.answerCallback === undefined) {
       console.log("User received an answer but never sent an offer.");
@@ -80,8 +80,8 @@ signallingSocket.on(
   "rtc-icecandidate",
   async ({ senderUsername, iceCandidate }) => {
     if (username === null) throw Error("Username not set");
-    if (senderUsername in chatConnections) {
-      chatConnections[senderUsername].peerConnection.addIceCandidate(
+    if (senderUsername in connections) {
+      connections[senderUsername].peerConnection.addIceCandidate(
         iceCandidate
       );
     } else {
@@ -100,7 +100,7 @@ type SendOfferProps = {
     answer: RTCSessionDescriptionInit
   ) => void;
   onDataChannelCreated: DataChannelCreatedCallback;
-  onClose?: ChatConnectionCloseCallback;
+  onClose?: CloseCallback;
 };
 export async function sendOffer({
   recipientUsername,
@@ -144,7 +144,7 @@ type AcceptOfferProps = {
   senderUsername: string;
   offer: RTCSessionDescriptionInit;
   onDataChannelCreated: DataChannelCreatedCallback;
-  onClose?: ChatConnectionCloseCallback;
+  onClose?: CloseCallback;
 };
 export async function acceptOffer({
   senderUsername,
@@ -182,9 +182,9 @@ export async function acceptOffer({
 
 type CreateChatConnectionProps = {
   peerUsername: string;
-  onAnswer?: ChatConnectionAnswerCallback;
+  onAnswer?: AnswerCallback;
   onDataChannelCreated: DataChannelCreatedCallback;
-  onClose?: ChatConnectionCloseCallback;
+  onClose?: CloseCallback;
 };
 async function createChatConnection({
   peerUsername,
@@ -212,7 +212,7 @@ async function createChatConnection({
   // Listen for new data channel and ICE candidates
   setUpPeerConnectionListeners(chatConn);
 
-  chatConnections[peerUsername] = chatConn;
+  connections[peerUsername] = chatConn;
   console.log("Connection in array");
   return chatConn;
 }
@@ -225,7 +225,7 @@ function closeChatConnection(chatConnection: ChatConnection): void {
   chatConnection.dataChannel?.close();
   chatConnection.peerConnection.close();
 
-  delete chatConnections[chatConnection.peerUsername];
+  delete connections[chatConnection.peerUsername];
 }
 
 async function createPeerConnection(): Promise<RTCPeerConnection> {

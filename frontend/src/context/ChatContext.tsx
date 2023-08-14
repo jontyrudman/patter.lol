@@ -78,10 +78,10 @@ function chatReducer(
       return newChats;
     }
     case "send-message": {
-      if (!(action.recipientUsername in chat.chatConnections) || !(action.recipientUsername in chats)) {
+      if (!(action.recipientUsername in chat.connections) || !(action.recipientUsername in chats)) {
         console.log(`No connection open to ${action.recipientUsername}`);
       }
-      const chatConnection = chat.chatConnections[action.recipientUsername];
+      const chatConnection = chat.connections[action.recipientUsername];
       const newChats = { ...chats };
       const outgoingMessage: ChatMessage = {
         senderUsername: chatConnection.username,
