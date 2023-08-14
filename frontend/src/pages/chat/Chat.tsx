@@ -35,6 +35,9 @@ export default function Chat() {
         senderUsername: chatConn.peerUsername,
       });
     });
+
+    const aborted = (t: string) => { console.log(`Connection ${t}.`) };
+    ["close","closing","error"].forEach((v) => chatConn.dataChannel?.addEventListener(v, () => aborted(v)))
   };
 
   const sendOffer = (recipientUsername: string) => {
@@ -44,7 +47,6 @@ export default function Chat() {
       recipientUsername,
       onAnswer: (conn) => {
         console.log(`Received answer from ${conn.peerUsername}`);
-        setUpDataChannelListeners(conn);
       },
       onDataChannelCreated: (conn) => {
         setUpDataChannelListeners(conn);
