@@ -1,13 +1,13 @@
-import { Chat } from "./pages/chat";
 import { ChatProvider } from "./context/ChatContext";
 import styles from "./App.module.css";
+import { RouterProvider } from "react-router";
+import router from "./routes";
 
 export default function App() {
   return (
     <div id={styles.App}>
-      <div className={styles.siteName}>patter.lol</div>
       <ChatProvider>
-        <Chat />
+        <RouterProvider router={router} />
       </ChatProvider>
     </div>
   );

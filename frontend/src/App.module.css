@@ -12,11 +12,3 @@
     width: var(--app-width);
   }
 }
-
-.siteName {
-  font-family: "Space Mono";
-  font-weight: bold;
-  font-style: italic;
-  font-size: 3em;
-  margin: 2rem 0;
-}

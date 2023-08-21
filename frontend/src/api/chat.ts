@@ -31,7 +31,12 @@ type IceServersConfig = {
 let offerCallback:
   | ((senderUsername: string, offer: RTCSessionDescriptionInit) => void)
   | null;
+let chatRequestCallback: ((senderUsername: string) => void) | null;
+let chatResponseCallback:
+  | ((senderUsername: string, response: "accept" | "reject") => void)
+  | null;
 let username: string | null = null;
+const MAX_PENDING_ICE_CANDIDATES = 10;
 
 // Listener for being assigned a name
 signallingSocket.on("assign-name", (name) => {
@@ -40,15 +45,36 @@ signallingSocket.on("assign-name", (name) => {
 
 // For when we receive candidates before a ChatConnection has been created
 const iceCandidateQueue: { [peerUsername: string]: RTCIceCandidateInit[] } = {};
+let allowedPeers: string[] = [];
 
 export const connections: { [peerUsername: string]: ChatConnection } = {};
+
+signallingSocket.on("chat-request", async ({ senderUsername }) => {
+  if (username === null) throw Error("Username not set");
+  if (senderUsername in connections)
+    console.error(`Connection already open for peer ${senderUsername}`);
+
+  if (chatRequestCallback === null)
+    throw Error("No way to handle chat request");
+  chatRequestCallback(senderUsername);
+});
+
+signallingSocket.on("chat-response", async ({ senderUsername, response }) => {
+  if (username === null) throw Error("Username not set");
+  if (senderUsername in connections)
+    console.error(`Connection already open for peer ${senderUsername}`);
+
+  if (chatResponseCallback === null)
+    throw Error("No way to handle chat response");
+  chatResponseCallback(senderUsername, response);
+});
 
 signallingSocket.on("rtc-offer", async ({ senderUsername, offer }) => {
   if (username === null) throw Error("Username not set");
   if (senderUsername in connections)
     console.error(`Connection already open for peer ${senderUsername}`);
 
-  iceCandidateQueue[senderUsername] = [];
+  iceCandidateQueue[senderUsername] = new Array(MAX_PENDING_ICE_CANDIDATES);
   // Run callback from onOffer
   if (offerCallback === null) return;
   offerCallback(senderUsername, offer);
@@ -82,9 +108,7 @@ signallingSocket.on(
   async ({ senderUsername, iceCandidate }) => {
     if (username === null) throw Error("Username not set");
     if (senderUsername in connections) {
-      connections[senderUsername].peerConnection.addIceCandidate(
-        iceCandidate
-      );
+      connections[senderUsername].peerConnection.addIceCandidate(iceCandidate);
     } else {
       console.log(
         `Received ICE candidate early. No connection open with ${senderUsername} (yet).`
@@ -93,6 +117,44 @@ signallingSocket.on(
     }
   }
 );
+
+export async function sendChatRequest(recipientUsername: string) {
+  signallingSocket.emit("chat-request", { recipientUsername });
+}
+
+export function onChatRequest(callback: (senderUsername: string) => void) {
+  chatRequestCallback = callback;
+}
+
+export function onChatResponse(
+  callback: (senderUsername: string, response: "accept" | "reject") => void
+) {
+  chatResponseCallback = callback;
+}
+
+export async function allowPeer(peerUsername: string) {
+  if (allowedPeers.includes(peerUsername)) return;
+  allowedPeers.push(peerUsername);
+  signallingSocket.emit("chat-response", {
+    recipientUsername: peerUsername,
+    response: "accept",
+  });
+}
+
+export async function blockPeer(peerUsername: string) {
+  allowedPeers = allowedPeers.filter((v) => v !== peerUsername);
+  signallingSocket.emit("chat-response", {
+    recipientUsername: peerUsername,
+    response: "reject",
+  });
+
+  // Remove any pending ICE candidates
+  delete iceCandidateQueue[peerUsername];
+}
+
+export function peerAllowed(peerUsername: string) {
+  return allowedPeers.includes(peerUsername);
+}
 
 type SendOfferProps = {
   recipientUsername: string;
@@ -122,7 +184,7 @@ export async function sendOffer({
     chatConn.peerConnection.createDataChannel("datachannel");
   chatConn.dataChannelCreatedCallback(chatConn);
 
-  iceCandidateQueue[recipientUsername] = [];
+  iceCandidateQueue[recipientUsername] = new Array(MAX_PENDING_ICE_CANDIDATES);
 
   // Send the offer
   const offer = await chatConn.peerConnection.createOffer();

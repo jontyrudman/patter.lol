@@ -1,5 +1,5 @@
-import Button from "../../components/Button";
-import { useChatDispatch, useChatState } from "../../context";
+import Button from "./Button";
+import { useChatDispatch, useChatState } from "../context";
 import styles from "./RequestList.module.css";
 
 export default function RequestList() {

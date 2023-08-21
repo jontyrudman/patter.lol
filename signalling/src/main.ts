@@ -20,6 +20,7 @@ if (process.env.NODE_ENV === "development") {
 // TODO: Limit number of duplicate connections
 // TODO: Rate limit socket
 // TODO: Rate limit ICE server endpoint hard
+// TODO: Timeout a user even if not disconnected
 
 interface UserSocket extends Socket {
   username: string;
@@ -113,7 +114,22 @@ function forwardToRecipient(
   }
 }
 
-function registerRtcHandshakeListener(socket: UserSocket) {
+function registerChatListeners(socket: UserSocket) {
+  socket.on("chat-request", ({ recipientUsername }) => {
+    console.log("Chat request from %s to %s", socket.username, recipientUsername);
+    forwardToRecipient(socket, recipientUsername, "chat-request", {
+      senderUsername: socket.username,
+    });
+  })
+
+  socket.on("chat-response", ({ recipientUsername, response }) => {
+    console.log("Chat response from %s to %s", socket.username, recipientUsername);
+    forwardToRecipient(socket, recipientUsername, "chat-response", {
+      senderUsername: socket.username,
+      response,
+    });
+  })
+
   socket.on("rtc-offer", ({ recipientUsername, offer }) => {
     console.log("Offer from %s to %s", socket.username, recipientUsername);
     forwardToRecipient(socket, recipientUsername, "rtc-offer", {
@@ -199,7 +215,7 @@ function setupWebSockets() {
     onConnect(userSocket);
 
     registerOnDisconnectListener(userSocket);
-    registerRtcHandshakeListener(userSocket);
+    registerChatListeners(userSocket);
   });
 }
 

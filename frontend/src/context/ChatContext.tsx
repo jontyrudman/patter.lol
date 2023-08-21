@@ -23,6 +23,7 @@ type ChatContextState = {
     [recipientName: string]: ChatConversation;
   };
   requests: { [requestorName: string]: ChatRequest };
+  username: string | null;
 };
 
 type ChatDispatchActionType = keyof ChatDispatchActionMap;
@@ -31,7 +32,7 @@ type ChatDispatchAction<K extends ChatDispatchActionType> =
 
 type ChatContextDispatch = Dispatch<ChatDispatchAction<ChatDispatchActionType>>;
 
-const initialChats: ChatContextState = { conversations: {}, requests: {} };
+const initialChats: ChatContextState = { conversations: {}, requests: {}, username: null };
 const chatContext = createContext<ChatContextState>(initialChats);
 const chatDispatchContext = createContext<ChatContextDispatch>(() => {});
 
@@ -43,8 +44,8 @@ export function useChatDispatch() {
   return useContext(chatDispatchContext);
 }
 
-
 type ChatDispatchActionMap = {
+  "set-username": { type: "set-username"; username: string | null };
   "new-conversation": { type: "new-conversation"; recipientUsername: string };
   "receive-message": {
     type: "receive-message";
@@ -64,6 +65,11 @@ function chatReducer(
   action: ChatDispatchAction<ChatDispatchActionType>
 ): ChatContextState {
   switch (action.type) {
+    case "set-username": {
+      const newChats = { ...chats };
+      newChats.username = action.username;
+      return newChats;
+    }
     case "new-conversation": {
       console.log(`Opening a new connection with ${action.recipientUsername}`);
       const newChats = { ...chats };
