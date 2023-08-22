@@ -12,7 +12,7 @@ export default function Conversation() {
   const { recipientUsername } = useParams();
   const [message, setMessage] = useState("");
   const [messageHistory, setMessageHistory] = useState([] as ChatMessage[]);
-  const chatState = useChatState();
+  const { conversations, username } = useChatState();
   const chatDispatch = useChatDispatch();
   const navigate = useNavigate();
 
@@ -33,14 +33,17 @@ export default function Conversation() {
   };
 
   useEffect(() => {
-    if (recipientUsername === undefined) {
+    if ((recipientUsername === undefined)
+       || (username === undefined)
+       || !(recipientUsername in conversations)) {
+      console.log(recipientUsername, username, conversations)
       navigate("/");
       return;
     }
     setMessageHistory(
-      chatState.conversations[recipientUsername]?.historyBuffer ?? []
+      conversations[recipientUsername]?.historyBuffer ?? []
     );
-  }, [chatState]);
+  }, [conversations, username, recipientUsername]);
 
   return (
     <>
