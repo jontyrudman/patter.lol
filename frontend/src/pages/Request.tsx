@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from "react-router";
 import Button from "../components/Button";
 import { useEffect } from "react";
-import { useChatDispatch, useChatState } from "../context";
-import { connections, sendOffer } from "../api/chat";
+import { useChatState } from "../context";
+import { connections } from "../api/chat";
 import { Link } from "react-router-dom";
 import { signallingSocket } from "../api";
 import Username from "../components/Username";
@@ -10,7 +10,6 @@ import Username from "../components/Username";
 export default function Request() {
   const { recipientUsername } = useParams();
   const { username } = useChatState();
-  const chatDispatch = useChatDispatch();
   const navigate = useNavigate();
   // TODO: Add a proper cancellation signal for the signalling server
 
@@ -32,24 +31,8 @@ export default function Request() {
         if (username === null) return;
 
         if (response === "accept") {
-          sendOffer({
-            myUsername: username,
-            recipientUsername: senderUsername,
-            onAnswer: () => {},
-            onDataChannelCreated: (chatConn) => {
-              chatDispatch({
-                type: "new-conversation",
-                recipientUsername: senderUsername,
-              });
-              chatConn.dataChannel?.addEventListener("message", (ev) => {
-                chatDispatch({type: "receive-message", message: ev.data, senderUsername})
-              })
-              navigate(`/chat/${senderUsername}`);
-            },
-            onClose: () => {
-              console.log("Connection closed");
-              navigate("/");
-            },
+          navigate("/handshake", {
+            state: { peerUsername: senderUsername, isInitiating: true },
           });
           return;
         }

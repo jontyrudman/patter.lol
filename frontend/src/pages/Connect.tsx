@@ -19,7 +19,7 @@ export default function Connect() {
     const recipientUsername = recipientUsernameRef.current?.value;
     if (recipientUsername === undefined || username === undefined) return;
 
-    navigate(`request/${recipientUsername}`);
+    navigate(`/request/${recipientUsername}`);
   };
 
   return (

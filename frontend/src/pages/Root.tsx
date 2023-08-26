@@ -2,12 +2,9 @@ import { useEffect } from "react";
 import { signallingSocket } from "../api";
 import { useChatDispatch, useChatState } from "../context";
 import {
-  acceptOffer,
   allowPeer,
   blockPeer,
   connections,
-  onOffer,
-  peerAllowed,
   rtcHandshakeSignalsOff,
   rtcHandshakeSignalsOn,
 } from "../api/chat";
@@ -36,34 +33,6 @@ export default function Root() {
   }, []);
 
   useEffect(() => {
-    onOffer((senderUsername, offer) => {
-      if (username === null) throw Error("Username null");
-      if (!peerAllowed(senderUsername)) throw Error("Peer not allowed");
-      acceptOffer({
-        myUsername: username,
-        senderUsername,
-        offer,
-        onDataChannelCreated: (chatConn) => {
-          chatDispatch({
-            type: "new-conversation",
-            recipientUsername: senderUsername,
-          });
-          chatConn.dataChannel?.addEventListener("message", (ev) => {
-            chatDispatch({
-              type: "receive-message",
-              message: ev.data,
-              senderUsername,
-            });
-          });
-          navigate(`/chat/${senderUsername}`);
-        },
-        onClose: () => {
-          console.log("Convo closed");
-          navigate("/");
-        },
-      });
-    });
-
     signallingSocket.on("chat-request", async ({ senderUsername }) => {
       if (senderUsername in connections)
         console.error(`Connection already open for peer ${senderUsername}`);
@@ -73,9 +42,11 @@ export default function Root() {
         requestorUsername: senderUsername,
         accept: () => {
           allowPeer(senderUsername);
+          navigate("/handshake", { state: { peerUsername: senderUsername, isInitiating: false } })
         },
         reject: () => {
           blockPeer(senderUsername);
+          // TODO: Do something
         },
       });
     });
