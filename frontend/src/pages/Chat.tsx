@@ -33,16 +33,16 @@ export default function Conversation() {
   };
 
   useEffect(() => {
-    if ((recipientUsername === undefined)
-       || (username === undefined)
-       || !(recipientUsername in conversations)) {
-      console.log(recipientUsername, username, conversations)
+    if (
+      recipientUsername === undefined ||
+      username === undefined ||
+      !(recipientUsername in conversations)
+    ) {
+      console.log(recipientUsername, username, conversations);
       navigate("/");
       return;
     }
-    setMessageHistory(
-      conversations[recipientUsername]?.historyBuffer ?? []
-    );
+    setMessageHistory(conversations[recipientUsername]?.historyBuffer ?? []);
   }, [conversations, username, recipientUsername]);
 
   return (
