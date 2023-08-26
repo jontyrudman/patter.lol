@@ -39,52 +39,62 @@ let allowedPeers: string[] = [];
 
 export const connections: { [peerUsername: string]: ChatConnection } = {};
 
-signallingSocket.on("rtc-offer", async ({ senderUsername, offer }) => {
-  if (senderUsername in connections)
-    console.error(`Connection already open for peer ${senderUsername}`);
+export function rtcHandshakeSignalsOn() {
+  signallingSocket.on("rtc-offer", async ({ senderUsername, offer }) => {
+    if (senderUsername in connections)
+      console.error(`Connection already open for peer ${senderUsername}`);
 
-  iceCandidateQueue[senderUsername] = new Array(MAX_PENDING_ICE_CANDIDATES);
-  // Run callback from onOffer
-  if (offerCallback === null) return;
-  offerCallback(senderUsername, offer);
-});
+    iceCandidateQueue[senderUsername] = new Array(MAX_PENDING_ICE_CANDIDATES);
+    // Run callback from onOffer
+    if (offerCallback === null) return;
+    offerCallback(senderUsername, offer);
+  });
 
-// Add answer event listener before we send an offer
-signallingSocket.on("rtc-answer", async ({ senderUsername, answer }) => {
-  if (senderUsername in connections) {
-    const chatConn = connections[senderUsername];
-
-    if (chatConn.answerCallback === undefined) {
-      console.log("User received an answer but never sent an offer.");
-      return;
-    }
-
-    const remoteDesc = new RTCSessionDescription(answer);
-    await chatConn.peerConnection.setRemoteDescription(remoteDesc);
-    chatConn.answerCallback(chatConn, answer);
-  } else {
-    console.error(
-      `Failed to accept answer. No connection open with ${senderUsername}`
-    );
-  }
-});
-
-// Listener for receiving an ICE candidate and adding it to the connection
-signallingSocket.on(
-  "rtc-icecandidate",
-  async ({ senderUsername, iceCandidate }) => {
+  // Add answer event listener before we send an offer
+  signallingSocket.on("rtc-answer", async ({ senderUsername, answer }) => {
     if (senderUsername in connections) {
-      connections[senderUsername].peerConnection.addIceCandidate(iceCandidate);
-    } else {
-      console.log(
-        `Received ICE candidate early. No connection open with ${senderUsername} (yet).`
-      );
-      iceCandidateQueue[senderUsername].push(iceCandidate);
-    }
-  }
-);
+      const chatConn = connections[senderUsername];
 
-export async function allowPeer(peerUsername: string) {
+      if (chatConn.answerCallback === undefined) {
+        console.log("User received an answer but never sent an offer.");
+        return;
+      }
+
+      const remoteDesc = new RTCSessionDescription(answer);
+      await chatConn.peerConnection.setRemoteDescription(remoteDesc);
+      chatConn.answerCallback(chatConn, answer);
+    } else {
+      console.error(
+        `Failed to accept answer. No connection open with ${senderUsername}`
+      );
+    }
+  });
+
+  // Listener for receiving an ICE candidate and adding it to the connection
+  signallingSocket.on(
+    "rtc-icecandidate",
+    async ({ senderUsername, iceCandidate }) => {
+      if (senderUsername in connections) {
+        connections[senderUsername].peerConnection.addIceCandidate(
+          iceCandidate
+        );
+      } else {
+        console.log(
+          `Received ICE candidate early. No connection open with ${senderUsername} (yet).`
+        );
+        iceCandidateQueue[senderUsername].push(iceCandidate);
+      }
+    }
+  );
+}
+
+export function rtcHandshakeSignalsOff() {
+  signallingSocket.off("rtc-offer");
+  signallingSocket.off("rtc-answer");
+  signallingSocket.off("rtc-icecandidate");
+}
+
+export function allowPeer(peerUsername: string) {
   if (allowedPeers.includes(peerUsername)) return;
   allowedPeers.push(peerUsername);
   signallingSocket.emit("chat-response", {
@@ -93,7 +103,7 @@ export async function allowPeer(peerUsername: string) {
   });
 }
 
-export async function blockPeer(peerUsername: string) {
+export function blockPeer(peerUsername: string) {
   allowedPeers = allowedPeers.filter((v) => v !== peerUsername);
   signallingSocket.emit("chat-response", {
     recipientUsername: peerUsername,

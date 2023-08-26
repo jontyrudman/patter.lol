@@ -8,7 +8,8 @@ import {
   connections,
   onOffer,
   peerAllowed,
-  sendOffer,
+  rtcHandshakeSignalsOff,
+  rtcHandshakeSignalsOn,
 } from "../api/chat";
 import RequestList from "../components/RequestList";
 import styles from "./Root.module.css";
@@ -21,6 +22,7 @@ export default function Root() {
 
   useEffect(() => {
     signallingSocket.connect();
+    rtcHandshakeSignalsOn();
 
     signallingSocket.on("assign-name", (username) => {
       chatDispatch({ type: "set-username", username });
@@ -28,6 +30,7 @@ export default function Root() {
 
     return () => {
       signallingSocket.off("assign-name");
+      rtcHandshakeSignalsOff();
       signallingSocket.disconnect();
     };
   }, []);
