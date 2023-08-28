@@ -5,3 +5,8 @@
   font-size: 3em;
   margin: 2rem 0;
 }
+
+.siteWideContainer {
+  height: 100%;
+  width: 100%;
+}

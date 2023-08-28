@@ -47,6 +47,7 @@ export function useChatDispatch() {
 type ChatDispatchActionMap = {
   "set-username": { type: "set-username"; username: string | null };
   "new-conversation": { type: "new-conversation"; recipientUsername: string };
+  "remove-conversation": { type: "remove-conversation"; recipientUsername: string };
   "receive-message": {
     type: "receive-message";
     message: string;
@@ -138,6 +139,14 @@ function chatReducer(
       );
       const newChats = { ...chats };
       delete newChats.requests[action.requestorUsername];
+      return newChats;
+    }
+    case "remove-conversation": {
+      console.log(
+        `Closing chat with ${action.recipientUsername}...`
+      );
+      const newChats = { ...chats };
+      delete newChats.conversations[action.recipientUsername];
       return newChats;
     }
   }

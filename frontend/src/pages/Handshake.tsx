@@ -1,13 +1,61 @@
+import { v4 as uuid } from "uuid";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { acceptOffer, onOffer, sendOffer } from "../api/chat";
+import { ChatConnection, acceptOffer, onOffer, sendOffer } from "../api/chat";
 import { useChatDispatch, useChatState } from "../context";
+import { useDialogDispatch } from "../context/DialogContext";
+
+// TODO: Handle peer-not-found
 
 export default function Handshake() {
   const { peerUsername, isInitiating } = useLocation().state;
   const navigate = useNavigate();
   const { username } = useChatState();
   const chatDispatch = useChatDispatch();
+  const dialogDispatch = useDialogDispatch();
+
+  function onDataChannelCreated(
+    chatConn: ChatConnection,
+    peerUsername: string
+  ) {
+    chatDispatch({
+      type: "new-conversation",
+      recipientUsername: peerUsername,
+    });
+    chatConn.dataChannel?.addEventListener("message", (ev) => {
+      chatDispatch({
+        type: "receive-message",
+        message: ev.data,
+        senderUsername: peerUsername,
+      });
+    });
+    chatConn.dataChannel?.addEventListener("close", () => {
+      const id = uuid();
+      dialogDispatch({
+        type: "open-dialog",
+        dialog: {
+          id,
+          text: `${peerUsername} has left the chat.`,
+          buttons: [
+            {
+              text: "Okay :(",
+              onClick: () => {
+                chatConn.close();
+                chatDispatch({type: "remove-conversation", recipientUsername: peerUsername})
+                dialogDispatch({ type: "close-dialog", id });
+                navigate("/");
+              },
+            },
+          ],
+        },
+      });
+    });
+    navigate(`/chat/${peerUsername}`);
+  }
+
+  function onChatConnClosed() {
+    navigate("/");
+  }
 
   useEffect(() => {
     if (username === null) {
@@ -20,24 +68,9 @@ export default function Handshake() {
         myUsername: username,
         recipientUsername: peerUsername,
         onAnswer: () => {},
-        onDataChannelCreated: (chatConn) => {
-          chatDispatch({
-            type: "new-conversation",
-            recipientUsername: peerUsername,
-          });
-          chatConn.dataChannel?.addEventListener("message", (ev) => {
-            chatDispatch({
-              type: "receive-message",
-              message: ev.data,
-              senderUsername: peerUsername,
-            });
-          });
-          navigate(`/chat/${peerUsername}`);
-        },
-        onClose: () => {
-          console.log("Connection closed");
-          navigate("/");
-        },
+        onDataChannelCreated: (chatConn) =>
+          onDataChannelCreated(chatConn, peerUsername),
+        onClose: onChatConnClosed,
       });
     } else if (isInitiating === false) {
       onOffer((senderUsername, offer) => {
@@ -48,24 +81,9 @@ export default function Handshake() {
           myUsername: username,
           senderUsername,
           offer,
-          onDataChannelCreated: (chatConn) => {
-            chatDispatch({
-              type: "new-conversation",
-              recipientUsername: senderUsername,
-            });
-            chatConn.dataChannel?.addEventListener("message", (ev) => {
-              chatDispatch({
-                type: "receive-message",
-                message: ev.data,
-                senderUsername,
-              });
-            });
-            navigate(`/chat/${senderUsername}`);
-          },
-          onClose: () => {
-            console.log("Convo closed");
-            navigate("/");
-          },
+          onDataChannelCreated: (chatConn) =>
+            onDataChannelCreated(chatConn, senderUsername),
+          onClose: onChatConnClosed,
         });
       });
     }

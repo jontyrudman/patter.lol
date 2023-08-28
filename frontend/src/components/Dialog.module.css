@@ -1,0 +1,17 @@
+.Dialog {
+  padding: 1rem 2rem;
+  border: 2px solid var(--border-color);
+  border-radius: .925em;
+  box-shadow: 1em 1em rgb(10 10 10 / 0.8);
+  position: absolute;
+  top: 4rem;
+  background-color: var(--dialog-color);
+}
+
+.DialogButtons {
+  display: grid;
+  grid-auto-flow: column;
+  justify-items: center;
+  gap: 1rem;
+  margin: 1rem 0 0.5rem 0;
+}
