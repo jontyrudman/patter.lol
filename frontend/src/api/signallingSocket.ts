@@ -3,6 +3,7 @@ import env from "../env";
 
 export type ServerToClientEvents = {
   "assign-name": (username: string) => void;
+  "rtc-peer-not-found": (peerUsername: string) => void;
   "rtc-icecandidate": ({
     senderUsername,
     iceCandidate,

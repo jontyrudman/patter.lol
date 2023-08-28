@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid";
 import { useNavigate, useParams } from "react-router";
 import Button from "../components/Button";
 import { useEffect } from "react";
@@ -6,11 +7,13 @@ import { connections } from "../api/chat";
 import { Link } from "react-router-dom";
 import { signallingSocket } from "../api";
 import Username from "../components/Username";
+import { useDialogDispatch } from "../context/DialogContext";
 
 export default function Request() {
   const { recipientUsername } = useParams();
   const { username } = useChatState();
   const navigate = useNavigate();
+  const dialogDispatch = useDialogDispatch();
   // TODO: Add a proper cancellation signal for the signalling server
 
   useEffect(() => {
@@ -18,6 +21,28 @@ export default function Request() {
       navigate("/");
       return;
     }
+
+    signallingSocket.on("rtc-peer-not-found", (peerUsername) => {
+      if (peerUsername !== recipientUsername) return;
+
+      const dialogId = uuid();
+      dialogDispatch({
+        type: "open-dialog",
+        dialog: {
+          id: dialogId,
+          text: "User not found!",
+          buttons: [
+            {
+              text: "Okay :(",
+              onClick: () => {
+                dialogDispatch({ type: "close-dialog", id: dialogId });
+                navigate("/");
+              },
+            },
+          ],
+        },
+      });
+    });
 
     signallingSocket.on(
       "chat-response",
@@ -37,7 +62,23 @@ export default function Request() {
           return;
         }
 
-        throw Error("Request rejected");
+        const dialogId = uuid();
+        dialogDispatch({
+          type: "open-dialog",
+          dialog: {
+            id: dialogId,
+            text: "Your request was rejected",
+            buttons: [
+              {
+                text: "Okay :(",
+                onClick: () => {
+                  dialogDispatch({ type: "close-dialog", id: dialogId });
+                  navigate("/");
+                },
+              },
+            ],
+          },
+        });
       }
     );
 
@@ -45,6 +86,7 @@ export default function Request() {
 
     return () => {
       signallingSocket.off("chat-response");
+      signallingSocket.off("rtc-peer-not-found");
     };
   }, []);
 
