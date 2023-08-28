@@ -1,4 +1,11 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { ChatMessage, useChatDispatch, useChatState } from "../context";
 import styles from "./Chat.module.css";
 import Message from "../components/Message";
@@ -8,13 +15,34 @@ import Form from "../components/Form";
 import { useNavigate, useParams } from "react-router";
 import Username from "../components/Username";
 
+function scrollToBottom(ref: RefObject<HTMLElement>) {
+  ref.current?.scrollTo({
+    top: ref.current.scrollHeight,
+    behavior: "smooth",
+  });
+}
+
 export default function Conversation() {
   const { recipientUsername } = useParams();
   const [message, setMessage] = useState("");
   const [messageHistory, setMessageHistory] = useState([] as ChatMessage[]);
-  const { conversations, username } = useChatState();
+  const [scrolledToLatest, setScrolledToLatest] = useState(true);
+  const chatState = useChatState();
+  const messageHistoryRef = useRef<HTMLDivElement>(null);
   const chatDispatch = useChatDispatch();
   const navigate = useNavigate();
+
+  const scrollHandler = () => {
+    if (
+      (messageHistoryRef.current?.scrollTop ?? 0) +
+        (messageHistoryRef.current?.clientHeight ?? 0) ===
+      messageHistoryRef.current?.scrollHeight
+    ) {
+      setScrolledToLatest(true);
+    } else {
+      setScrolledToLatest(false);
+    }
+  };
 
   const submitHandler = (e: FormEvent) => {
     if (recipientUsername === undefined) {
@@ -33,23 +61,63 @@ export default function Conversation() {
   };
 
   useEffect(() => {
+    if (document.hidden) {
+      const scrollToBottomOnVisible = function () {
+        if (!document.hidden && scrolledToLatest) {
+          // Scroll to bottom if we sent the message or if the user was already at the bottom before receiving a new message
+          if (
+            scrolledToLatest ||
+            messageHistory.slice(-1)[0]?.senderUsername === chatState.username
+          ) {
+            scrollToBottom(messageHistoryRef);
+          }
+          document.removeEventListener(
+            "visibilitychange",
+            scrollToBottomOnVisible
+          );
+        }
+      };
+      document.addEventListener("visibilitychange", scrollToBottomOnVisible);
+    } else {
+      if (
+        scrolledToLatest ||
+        messageHistory.slice(-1)[0]?.senderUsername === chatState.username
+      ) {
+        // Scroll to bottom if we sent the message or if the user was already at the bottom before receiving a new message
+        scrollToBottom(messageHistoryRef);
+      }
+    }
+  }, [messageHistory]);
+
+  useEffect(() => {
     if (
       recipientUsername === undefined ||
-      username === undefined ||
-      !(recipientUsername in conversations)
+      chatState.username === undefined ||
+      !(recipientUsername in chatState.conversations)
     ) {
-      console.log(recipientUsername, username, conversations);
+      console.log(
+        recipientUsername,
+        chatState.username,
+        chatState.conversations
+      );
       navigate("/");
       return;
     }
-    setMessageHistory(conversations[recipientUsername]?.historyBuffer ?? []);
-  }, [conversations, username, recipientUsername]);
+
+    setMessageHistory(
+      [...chatState.conversations[recipientUsername]?.historyBuffer] ?? []
+    );
+  }, [chatState, recipientUsername]);
 
   return (
     <>
       <Username />
       <div className={styles.ConversationContainer}>
-        <div className={styles.ConversationHistory}>
+        <div
+          className={styles.ConversationHistory}
+          ref={messageHistoryRef}
+          onScroll={scrollHandler}
+        >
           <p>
             You're talking to <b>{recipientUsername}</b>
           </p>
@@ -68,6 +136,7 @@ export default function Conversation() {
           <TextInput
             type="text"
             value={message}
+            required
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setMessage(e.target.value)
             }
