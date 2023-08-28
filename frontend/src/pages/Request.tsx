@@ -51,7 +51,7 @@ export default function Request() {
           console.error(`Connection already open for peer ${senderUsername}`);
 
         if (recipientUsername !== senderUsername)
-          throw Error("Response received not for this request");
+          console.error("Response received not for this request");
 
         if (username === null) return;
 
