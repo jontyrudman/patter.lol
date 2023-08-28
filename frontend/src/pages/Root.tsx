@@ -64,20 +64,30 @@ export default function Root() {
 
   return (
     <>
-      {Object.values(dialogState).map(({ text, buttons }, index) => {
+      {Object.values(dialogState).map(({ text, buttons, id }, index) => {
         return (
-          <Dialog offsetX={index * 10} offsetY={index * 10} open>
+          <Dialog
+            offsetX={index * 10}
+            offsetY={index * 10}
+            open
+            key={`dialog_${id}`}
+          >
             {text}
             <DialogButtons>
-              {buttons.map(({ text, onClick }) => (
-                <Button onClick={onClick}>{text}</Button>
+              {buttons.map(({ text, onClick }, btnIndex) => (
+                <Button key={`dialogbtn_${id}_${btnIndex}`} onClick={onClick}>
+                  {text}
+                </Button>
               ))}
             </DialogButtons>
           </Dialog>
         );
       })}
       {/* @ts-ignore */}
-      <div className={styles.siteWideContainer} inert={Object.values(dialogState).length > 0 ? "" : undefined}>
+      <div
+        className={styles.siteWideContainer}
+        inert={Object.values(dialogState).length > 0 ? "" : undefined}
+      >
         <div className={styles.siteName}>patter.lol</div>
         <RequestList />
         <Outlet />
