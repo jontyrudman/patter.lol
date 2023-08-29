@@ -84,9 +84,29 @@ export default function Request() {
       }
     );
 
-    signallingSocket
-      .timeout(env.SIGNALLING_TIMEOUT_MS)
-      .emit("chat-request", { recipientUsername });
+    try {
+      signallingSocket
+        .timeout(env.SIGNALLING_TIMEOUT_MS)
+        .emit("chat-request", { recipientUsername });
+    } catch {
+      const id = uuid();
+      dialogDispatch({
+        type: "open-dialog",
+        dialog: {
+          id,
+          text: "Failed to send chat request",
+          buttons: [
+            {
+              text: "Okay :(",
+              onClick: () => {
+                navigate("/");
+                dialogDispatch({ type: "close-dialog", id });
+              },
+            },
+          ],
+        },
+      });
+    }
 
     return () => {
       signallingSocket.off("chat-response");
