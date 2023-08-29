@@ -26,7 +26,7 @@ const router = createBrowserRouter([
       },
       {
         // Chat with recipient
-        path: "convo/:recipientUsername",
+        path: "chat/:recipientUsername",
         element: <Chat />,
       },
     ],
