@@ -1,7 +1,8 @@
 import signallingSocket from "./signallingSocket";
-import env from "../env";
+import env from "../utils/env";
 // @ts-ignore
 import adapter from "webrtc-adapter";
+import logger from "../utils/logger";
 
 type CloseCallback = () => void;
 type AnswerCallback = (
@@ -42,7 +43,7 @@ export const connections: { [peerUsername: string]: ChatConnection } = {};
 export function rtcHandshakeSignalsOn() {
   signallingSocket.on("rtc-offer", async ({ senderUsername, offer }) => {
     if (senderUsername in connections)
-      console.error(`Connection already open for peer ${senderUsername}`);
+      logger.error(`Connection already open for peer ${senderUsername}`);
 
     iceCandidateQueue[senderUsername] = new Array(MAX_PENDING_ICE_CANDIDATES);
     // Run callback from onOffer
@@ -56,7 +57,7 @@ export function rtcHandshakeSignalsOn() {
       const chatConn = connections[senderUsername];
 
       if (chatConn.answerCallback === undefined) {
-        console.log("User received an answer but never sent an offer.");
+        logger.debug("User received an answer but never sent an offer.");
         return;
       }
 
@@ -64,7 +65,7 @@ export function rtcHandshakeSignalsOn() {
       await chatConn.peerConnection.setRemoteDescription(remoteDesc);
       chatConn.answerCallback(chatConn, answer);
     } else {
-      console.error(
+      logger.debug(
         `Failed to accept answer. No connection open with ${senderUsername}`
       );
     }
@@ -79,7 +80,7 @@ export function rtcHandshakeSignalsOn() {
           iceCandidate
         );
       } else {
-        console.log(
+        logger.debug(
           `Received ICE candidate early. No connection open with ${senderUsername} (yet).`
         );
         iceCandidateQueue[senderUsername].push(iceCandidate);
@@ -135,7 +136,7 @@ export async function sendOffer({
   onDataChannelCreated,
   onClose,
 }: SendOfferProps): Promise<ChatConnection> {
-  console.log(`Sending offer to ${recipientUsername}...`);
+  logger.info(`Sending offer to ${recipientUsername}...`);
   const chatConn = await createChatConnection({
     myUsername,
     peerUsername: recipientUsername,
@@ -184,7 +185,7 @@ export async function acceptOffer({
   onDataChannelCreated,
   onClose,
 }: AcceptOfferProps): Promise<ChatConnection> {
-  console.log(`Accepting offer from ${senderUsername}...`);
+  logger.info(`Accepting offer from ${senderUsername}...`);
   const chatConn = await createChatConnection({
     myUsername,
     peerUsername: senderUsername,
@@ -206,7 +207,7 @@ export async function acceptOffer({
   // Add early ICE candidates
   while (iceCandidateQueue[senderUsername].length) {
     const candidate = iceCandidateQueue[senderUsername].pop();
-    console.log("Adding early ICE candidate %s", JSON.stringify(candidate));
+    logger.debug("Adding early ICE candidate %s", JSON.stringify(candidate));
     chatConn.peerConnection.addIceCandidate(candidate);
   }
 
@@ -227,7 +228,7 @@ async function createChatConnection({
   onDataChannelCreated,
   onClose,
 }: CreateChatConnectionProps): Promise<ChatConnection> {
-  console.log("Creating connection...");
+  logger.debug("Creating connection...");
 
   const chatConn: ChatConnection = {
     username: myUsername,
@@ -247,7 +248,7 @@ async function createChatConnection({
   setUpPeerConnectionListeners(chatConn);
 
   connections[peerUsername] = chatConn;
-  console.log("Connection in array");
+  logger.debug("Connection now added to array");
   return chatConn;
 }
 
@@ -275,7 +276,6 @@ async function getIceServers(): Promise<IceServersConfig> {
     headers: { "Content-Type": "application/json" },
   });
   const { iceServers } = await response.json();
-  console.log("Received ICE servers: %s", JSON.stringify(iceServers));
   return {
     iceServers,
   };

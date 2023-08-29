@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { signallingSocket } from "../api";
 import Username from "../components/Username";
 import { useDialogDispatch } from "../context/DialogContext";
+import logger from "../utils/logger";
 
 export default function Request() {
   const { recipientUsername } = useParams();
@@ -48,10 +49,10 @@ export default function Request() {
       "chat-response",
       async ({ senderUsername, response }) => {
         if (senderUsername in connections)
-          console.error(`Connection already open for peer ${senderUsername}`);
+          logger.error(`Connection already open for peer ${senderUsername}`);
 
         if (recipientUsername !== senderUsername)
-          console.error("Response received not for this request");
+          logger.debug("Response received not for this request");
 
         if (username === null) return;
 

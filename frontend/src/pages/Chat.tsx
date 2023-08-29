@@ -14,6 +14,7 @@ import TextInput from "../components/TextInput";
 import Form from "../components/Form";
 import { useNavigate, useParams } from "react-router";
 import Username from "../components/Username";
+import logger from "../utils/logger";
 
 function scrollToBottom(ref: RefObject<HTMLElement>) {
   ref.current?.scrollTo({
@@ -49,7 +50,6 @@ export default function Conversation() {
       navigate("/");
       return;
     }
-    console.log(`Submitting ${message}`);
     e.preventDefault();
 
     setMessage("");
@@ -95,7 +95,8 @@ export default function Conversation() {
       chatState.username === undefined ||
       !(recipientUsername in chatState.conversations)
     ) {
-      console.log(
+      logger.error("You or the peer aren't initialised")
+      logger.debug(
         recipientUsername,
         chatState.username,
         chatState.conversations

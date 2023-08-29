@@ -1,5 +1,6 @@
 import { Socket, io } from "socket.io-client";
-import env from "../env";
+import env from "../utils/env";
+import logger from "../utils/logger";
 
 export type ServerToClientEvents = {
   "assign-name": (username: string) => void;
@@ -82,11 +83,11 @@ const signallingSocket: SignallingSocket = io(env.SIGNALLING_WS, {
 });
 
 signallingSocket.onAny((...props) => {
-  console.log("RTC rx: %s", JSON.stringify([...props]));
+  logger.debug("RTC rx: %s", JSON.stringify([...props]));
 });
 
 signallingSocket.onAnyOutgoing((...props) => {
-  console.log("RTC tx: %s", JSON.stringify([...props]));
+  logger.debug("RTC tx: %s", JSON.stringify([...props]));
 });
 
 export default signallingSocket;

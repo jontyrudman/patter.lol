@@ -14,6 +14,7 @@ import { Outlet, useNavigate } from "react-router";
 import { useDialogState } from "../context/DialogContext";
 import Dialog, { DialogButtons } from "../components/Dialog";
 import Button from "../components/Button";
+import logger from "../utils/logger";
 
 export default function Root() {
   const { username } = useChatState();
@@ -39,7 +40,7 @@ export default function Root() {
   useEffect(() => {
     signallingSocket.on("chat-request", async ({ senderUsername }) => {
       if (senderUsername in connections)
-        console.error(`Connection already open for peer ${senderUsername}`);
+        logger.error(`Connection already open for peer ${senderUsername}`);
 
       chatDispatch({
         type: "new-request",
@@ -52,7 +53,6 @@ export default function Root() {
         },
         reject: () => {
           blockPeer(senderUsername);
-          // TODO: Do something
         },
       });
     });
@@ -83,9 +83,9 @@ export default function Root() {
           </Dialog>
         );
       })}
-      {/* @ts-ignore */}
       <div
         className={styles.siteWideContainer}
+        /* @ts-ignore */
         inert={Object.values(dialogState).length > 0 ? "" : undefined}
       >
         <div className={styles.siteName}>patter.lol</div>

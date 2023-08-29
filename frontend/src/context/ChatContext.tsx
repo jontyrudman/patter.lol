@@ -1,5 +1,6 @@
 import { Dispatch, createContext, useContext, useReducer } from "react";
 import { chat } from "../api";
+import logger from "../utils/logger";
 
 export type ChatRequest = {
   requestorUsername: string;
@@ -72,7 +73,7 @@ function chatReducer(
       return newChats;
     }
     case "new-conversation": {
-      console.log(`Opening a new connection with ${action.recipientUsername}`);
+      logger.info(`Opening a new connection with ${action.recipientUsername}`);
       const newChats = { ...chats };
       newChats.conversations[action.recipientUsername] = {
         recipientUsername: action.recipientUsername,
@@ -81,11 +82,11 @@ function chatReducer(
       return newChats;
     }
     case "receive-message": {
-      console.log(
-        `new message from ${action.senderUsername}: ${action.message}`
+      logger.info(
+        `New message from ${action.senderUsername}: ${action.message}`
       );
       if (!(action.senderUsername in chats.conversations)) {
-        console.log(`No conversation open with ${action.senderUsername}`);
+        logger.error(`No conversation open with ${action.senderUsername}`);
       }
       const newChats = { ...chats };
       const incomingMessage: ChatMessage = {
@@ -104,8 +105,9 @@ function chatReducer(
         !(action.recipientUsername in chat.connections) ||
         !(action.recipientUsername in chats.conversations)
       ) {
-        console.log(`No connection open to ${action.recipientUsername}`);
+        logger.error(`No connection open to ${action.recipientUsername}`);
       }
+      logger.info(`Sending message "${action.message}"...`);
       const chatConnection = chat.connections[action.recipientUsername];
       const newChats = { ...chats };
       const outgoingMessage: ChatMessage = {
@@ -122,7 +124,7 @@ function chatReducer(
       return newChats;
     }
     case "new-request": {
-      console.log(
+      logger.info(
         `Logging new chat request from ${action.requestorUsername}...`
       );
       const newChats = { ...chats };
@@ -134,7 +136,7 @@ function chatReducer(
       return newChats;
     }
     case "remove-request": {
-      console.log(
+      logger.info(
         `Removing chat request from ${action.requestorUsername}...`
       );
       const newChats = { ...chats };
@@ -142,7 +144,7 @@ function chatReducer(
       return newChats;
     }
     case "remove-conversation": {
-      console.log(
+      logger.info(
         `Closing chat with ${action.recipientUsername}...`
       );
       const newChats = { ...chats };
