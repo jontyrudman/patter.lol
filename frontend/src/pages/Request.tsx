@@ -9,6 +9,7 @@ import { signallingSocket } from "../api";
 import Username from "../components/Username";
 import { useDialogDispatch } from "../context/DialogContext";
 import logger from "../utils/logger";
+import env from "../utils/env";
 
 export default function Request() {
   const { recipientUsername } = useParams();
@@ -83,7 +84,9 @@ export default function Request() {
       }
     );
 
-    signallingSocket.emit("chat-request", { recipientUsername });
+    signallingSocket
+      .timeout(env.SIGNALLING_TIMEOUT_MS)
+      .emit("chat-request", { recipientUsername });
 
     return () => {
       signallingSocket.off("chat-response");

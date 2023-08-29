@@ -98,7 +98,7 @@ export function rtcHandshakeSignalsOff() {
 export function allowPeer(peerUsername: string) {
   if (allowedPeers.includes(peerUsername)) return;
   allowedPeers.push(peerUsername);
-  signallingSocket.emit("chat-response", {
+  signallingSocket.timeout(env.SIGNALLING_TIMEOUT_MS).emit("chat-response", {
     recipientUsername: peerUsername,
     response: "accept",
   });
@@ -106,7 +106,7 @@ export function allowPeer(peerUsername: string) {
 
 export function blockPeer(peerUsername: string) {
   allowedPeers = allowedPeers.filter((v) => v !== peerUsername);
-  signallingSocket.emit("chat-response", {
+  signallingSocket.timeout(env.SIGNALLING_TIMEOUT_MS).emit("chat-response", {
     recipientUsername: peerUsername,
     response: "reject",
   });
@@ -155,7 +155,7 @@ export async function sendOffer({
   // Send the offer
   const offer = await chatConn.peerConnection.createOffer();
   await chatConn.peerConnection.setLocalDescription(offer);
-  signallingSocket.emit("rtc-offer", {
+  signallingSocket.timeout(env.SIGNALLING_TIMEOUT_MS).emit("rtc-offer", {
     recipientUsername: recipientUsername,
     offer,
   });
@@ -199,7 +199,7 @@ export async function acceptOffer({
   );
   const answer = await chatConn.peerConnection.createAnswer();
   await chatConn.peerConnection.setLocalDescription(answer);
-  signallingSocket.emit("rtc-answer", {
+  signallingSocket.timeout(env.SIGNALLING_TIMEOUT_MS).emit("rtc-answer", {
     recipientUsername: senderUsername,
     answer,
   });
@@ -292,10 +292,12 @@ function setUpPeerConnectionListeners(chatConnection: ChatConnection): void {
 
   chatConnection.peerConnection.addEventListener("icecandidate", (event) => {
     if (event.candidate) {
-      signallingSocket.emit("rtc-icecandidate", {
-        recipientUsername: chatConnection.peerUsername,
-        iceCandidate: event.candidate,
-      });
+      signallingSocket
+        .timeout(env.SIGNALLING_TIMEOUT_MS)
+        .emit("rtc-icecandidate", {
+          recipientUsername: chatConnection.peerUsername,
+          iceCandidate: event.candidate,
+        });
     }
   });
 }

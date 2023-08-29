@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid";
 import { useEffect } from "react";
 import { signallingSocket } from "../api";
 import { useChatDispatch, useChatState } from "../context";
@@ -11,7 +12,7 @@ import {
 import RequestList from "../components/RequestList";
 import styles from "./Root.module.css";
 import { Outlet, useNavigate } from "react-router";
-import { useDialogState } from "../context/DialogContext";
+import { useDialogDispatch, useDialogState } from "../context/DialogContext";
 import Dialog, { DialogButtons } from "../components/Dialog";
 import Button from "../components/Button";
 import logger from "../utils/logger";
@@ -21,10 +22,31 @@ export default function Root() {
   const chatDispatch = useChatDispatch();
   const navigate = useNavigate();
   const dialogState = useDialogState();
+  const dialogDispatch = useDialogDispatch();
 
   useEffect(() => {
     signallingSocket.connect();
     rtcHandshakeSignalsOn();
+
+    signallingSocket.on("connect_error", () => {
+      const id = uuid();
+      dialogDispatch({
+        type: "open-dialog",
+        dialog: {
+          id,
+          text: "Couldn't connect to the signalling server!",
+          buttons: [
+            {
+              text: "Retry",
+              onClick: () => {
+                signallingSocket.connect();
+                dialogDispatch({ type: "close-dialog", id });
+              },
+            },
+          ],
+        },
+      });
+    });
 
     signallingSocket.on("assign-name", (username) => {
       chatDispatch({ type: "set-username", username });

@@ -80,6 +80,8 @@ type SignallingSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const signallingSocket: SignallingSocket = io(env.SIGNALLING_WS, {
   autoConnect: false,
+  reconnection: false,
+  timeout: 50000,
 });
 
 signallingSocket.onAny((...props) => {

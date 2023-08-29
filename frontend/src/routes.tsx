@@ -2,12 +2,14 @@ import { Root, Request, Chat } from "./pages";
 import { createBrowserRouter } from "react-router-dom";
 import Connect from "./pages/Connect";
 import Handshake from "./pages/Handshake";
+import ErrorBoundary from "./pages/ErrorBoundary";
 
 const router = createBrowserRouter([
   {
     // Select recipient
     path: "/",
     element: <Root />,
+    errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
@@ -24,7 +26,7 @@ const router = createBrowserRouter([
       },
       {
         // Chat with recipient
-        path: "chat/:recipientUsername",
+        path: "convo/:recipientUsername",
         element: <Chat />,
       },
     ],
