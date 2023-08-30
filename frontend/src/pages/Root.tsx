@@ -52,7 +52,12 @@ export default function Root() {
       chatDispatch({ type: "set-username", username });
     });
 
+    signallingSocket.on("user-list", (users) => {
+      chatDispatch({type: "set-user-list", users});
+    });
+
     return () => {
+      signallingSocket.off("user-list");
       signallingSocket.off("assign-name");
       rtcHandshakeSignalsOff();
       signallingSocket.disconnect();

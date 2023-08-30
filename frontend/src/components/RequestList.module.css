@@ -3,13 +3,21 @@
   grid-auto-flow: row;
   gap: 1rem;
   margin: 0 0 2rem 0;
+  max-height: 6rem;
+  overflow: auto;
 }
 
 .request {
   display: grid;
+  width: 80%;
   grid-template-columns: auto auto auto;
   gap: 1rem;
   align-items: center;
-  justify-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  justify-self: center;
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
 }

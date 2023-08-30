@@ -25,6 +25,7 @@ type ChatContextState = {
   };
   requests: { [requestorName: string]: ChatRequest };
   username: string | null;
+  userList: string[] | null;
 };
 
 type ChatDispatchActionType = keyof ChatDispatchActionMap;
@@ -33,7 +34,12 @@ type ChatDispatchAction<K extends ChatDispatchActionType> =
 
 type ChatContextDispatch = Dispatch<ChatDispatchAction<ChatDispatchActionType>>;
 
-const initialChats: ChatContextState = { conversations: {}, requests: {}, username: null };
+const initialChats: ChatContextState = {
+  conversations: {},
+  requests: {},
+  username: null,
+  userList: null,
+};
 const chatContext = createContext<ChatContextState>(initialChats);
 const chatDispatchContext = createContext<ChatContextDispatch>(() => {});
 
@@ -47,8 +53,12 @@ export function useChatDispatch() {
 
 type ChatDispatchActionMap = {
   "set-username": { type: "set-username"; username: string | null };
+  "set-user-list": { type: "set-user-list"; users: string[] };
   "new-conversation": { type: "new-conversation"; recipientUsername: string };
-  "remove-conversation": { type: "remove-conversation"; recipientUsername: string };
+  "remove-conversation": {
+    type: "remove-conversation";
+    recipientUsername: string;
+  };
   "receive-message": {
     type: "receive-message";
     message: string;
@@ -60,7 +70,7 @@ type ChatDispatchActionMap = {
     recipientUsername: string;
   };
   "new-request": { type: "new-request" } & ChatRequest;
-  "remove-request": { type: "remove-request", requestorUsername: string};
+  "remove-request": { type: "remove-request"; requestorUsername: string };
 };
 function chatReducer(
   chats: ChatContextState,
@@ -70,6 +80,11 @@ function chatReducer(
     case "set-username": {
       const newChats = { ...chats };
       newChats.username = action.username;
+      return newChats;
+    }
+    case "set-user-list": {
+      const newChats = { ...chats };
+      newChats.userList = action.users;
       return newChats;
     }
     case "new-conversation": {
@@ -128,25 +143,21 @@ function chatReducer(
         `Logging new chat request from ${action.requestorUsername}...`
       );
       const newChats = { ...chats };
-      newChats.requests[action.requestorUsername] = ({
+      newChats.requests[action.requestorUsername] = {
         requestorUsername: action.requestorUsername,
         accept: action.accept,
         reject: action.reject,
-      });
+      };
       return newChats;
     }
     case "remove-request": {
-      logger.info(
-        `Removing chat request from ${action.requestorUsername}...`
-      );
+      logger.info(`Removing chat request from ${action.requestorUsername}...`);
       const newChats = { ...chats };
       delete newChats.requests[action.requestorUsername];
       return newChats;
     }
     case "remove-conversation": {
-      logger.info(
-        `Closing chat with ${action.recipientUsername}...`
-      );
+      logger.info(`Closing chat with ${action.recipientUsername}...`);
       const newChats = { ...chats };
       delete newChats.conversations[action.recipientUsername];
       return newChats;

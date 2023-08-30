@@ -4,6 +4,7 @@ import logger from "../utils/logger";
 
 export type ServerToClientEvents = {
   "assign-name": (username: string) => void;
+  "user-list": (users: string[]) => void;
   "rtc-peer-not-found": (peerUsername: string) => void;
   "rtc-icecandidate": ({
     senderUsername,

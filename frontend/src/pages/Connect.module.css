@@ -1,6 +1,9 @@
 .ConnectForm {
+  /* Account for title and username */
+  max-height: 30rem;
+  min-height: 5rem;
   display: grid;
-  grid-auto-flow: row;
+  grid-template-rows: auto 1fr;
   gap: 1rem;
-  place-items: center;
+  justify-items: center;
 }

@@ -21,12 +21,15 @@ export default function RequestList() {
       {Object.values(requests).map(({ requestorUsername, accept, reject }, index) => (
         <div className={styles.request} key={`request_${index}`}>
           <p><b>{requestorUsername}</b> wants to talk with you.</p>
-          <Button onClick={() => closeWrapper(requestorUsername, reject)}>
-            Reject
-          </Button>
-          <Button onClick={() => closeWrapper(requestorUsername, accept)}>
-            Accept
-          </Button>
+          <div />
+          <div className={styles.buttons}>
+            <Button onClick={() => closeWrapper(requestorUsername, accept)}>
+              Accept
+            </Button>
+            <Button onClick={() => closeWrapper(requestorUsername, reject)}>
+              Reject
+            </Button>
+          </div>
         </div>
       ))}
     </div>

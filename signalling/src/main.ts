@@ -54,19 +54,9 @@ function uniqueName() {
   return name;
 }
 
-/**
- * Runs for each new socket.
- * If the client already has a name, assign it to this socket too.
- * Assign a new client (based on IP) a random name on the socket.
- */
-function usernameMiddleware(socket: Socket, next: Function) {
-  const userSocket = <UserSocket>socket;
-  const username = uniqueName();
-  connectedUsers[username] = userSocket.id;
-  userSocket.username = username;
-  console.log("Assigned new user %s", username);
-
-  next();
+function broadcastUserList(io: Server) {
+  console.log("Sending list of users");
+  io.emit("user-list", Object.keys(connectedUsers));
 }
 
 function onConnect(socket: UserSocket) {
@@ -78,9 +68,10 @@ function onConnect(socket: UserSocket) {
 
   // Send a name to the client
   socket.emit("assign-name", socket.username);
+  socket.emit("user-list", Object.keys(connectedUsers));
 }
 
-function registerOnDisconnectListener(socket: UserSocket) {
+function registerOnDisconnectListener(io: Server, socket: UserSocket) {
   // Remove the socket from connectedUsers or remove user if there is only one
   socket.on("disconnect", () => {
     console.log(
@@ -90,6 +81,7 @@ function registerOnDisconnectListener(socket: UserSocket) {
     );
 
     delete connectedUsers[socket.username];
+    broadcastUserList(io);
   });
 }
 
@@ -116,19 +108,27 @@ function forwardToRecipient(
 
 function registerChatListeners(socket: UserSocket) {
   socket.on("chat-request", ({ recipientUsername }) => {
-    console.log("Chat request from %s to %s", socket.username, recipientUsername);
+    console.log(
+      "Chat request from %s to %s",
+      socket.username,
+      recipientUsername
+    );
     forwardToRecipient(socket, recipientUsername, "chat-request", {
       senderUsername: socket.username,
     });
-  })
+  });
 
   socket.on("chat-response", ({ recipientUsername, response }) => {
-    console.log("Chat response from %s to %s", socket.username, recipientUsername);
+    console.log(
+      "Chat response from %s to %s",
+      socket.username,
+      recipientUsername
+    );
     forwardToRecipient(socket, recipientUsername, "chat-response", {
       senderUsername: socket.username,
       response,
     });
-  })
+  });
 
   socket.on("rtc-offer", ({ recipientUsername, offer }) => {
     console.log("Offer from %s to %s", socket.username, recipientUsername);
@@ -208,13 +208,29 @@ function setupWebSockets() {
 
   getSocketById = (id) => <UserSocket>io.sockets.sockets.get(id);
 
-  io.use(usernameMiddleware);
+  /**
+   * Runs for each new socket.
+   * If the client already has a name, assign it to this socket too.
+   * Assign a new client (based on IP) a random name on the socket.
+   */
+  io.use((socket: Socket, next: Function) => {
+    const userSocket = <UserSocket>socket;
+    const username = uniqueName();
+    connectedUsers[username] = userSocket.id;
+    userSocket.username = username;
+    console.log("Assigned new user %s", username);
+
+    // Send out updated user list to all clients
+    broadcastUserList(io);
+
+    next();
+  });
 
   io.on("connection", (socket) => {
     const userSocket = <UserSocket>socket;
     onConnect(userSocket);
 
-    registerOnDisconnectListener(userSocket);
+    registerOnDisconnectListener(io, userSocket);
     registerChatListeners(userSocket);
   });
 }
