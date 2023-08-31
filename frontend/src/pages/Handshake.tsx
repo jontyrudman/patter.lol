@@ -5,8 +5,6 @@ import { ChatConnection, acceptOffer, onOffer, sendOffer } from "../api/chat";
 import { useChatDispatch, useChatState } from "../context";
 import { useDialogDispatch } from "../context/DialogContext";
 
-// TODO: Handle peer-not-found
-
 export default function Handshake() {
   const { peerUsername, isInitiating } = useLocation().state;
   const navigate = useNavigate();
@@ -14,19 +12,16 @@ export default function Handshake() {
   const chatDispatch = useChatDispatch();
   const dialogDispatch = useDialogDispatch();
 
-  function onDataChannelCreated(
-    chatConn: ChatConnection,
-    peerUsername: string
-  ) {
+  function initConversation(chatConn: ChatConnection, _peerUsername: string) {
     chatDispatch({
       type: "new-conversation",
-      recipientUsername: peerUsername,
+      recipientUsername: _peerUsername,
     });
     chatConn.dataChannel?.addEventListener("message", (ev) => {
       chatDispatch({
         type: "receive-message",
         message: ev.data,
-        senderUsername: peerUsername,
+        senderUsername: _peerUsername,
       });
     });
     chatConn.dataChannel?.addEventListener("close", () => {
@@ -35,13 +30,13 @@ export default function Handshake() {
         type: "open-dialog",
         dialog: {
           id,
-          text: `${peerUsername} has left the chat.`,
+          text: `${_peerUsername} has left the chat.`,
           buttons: [
             {
               text: "Okay :(",
               onClick: () => {
                 chatConn.close();
-                chatDispatch({type: "remove-conversation", recipientUsername: peerUsername})
+                chatDispatch({type: "remove-conversation", recipientUsername: _peerUsername})
                 dialogDispatch({ type: "close-dialog", id });
                 navigate("/");
               },
@@ -50,7 +45,31 @@ export default function Handshake() {
         },
       });
     });
-    navigate(`/chat/${peerUsername}`);
+    navigate(`/chat/${_peerUsername}`);
+  }
+
+  /**
+   * Wait for data channel to open before starting the chat
+   */
+  function onDataChannelCreated(
+    chatConn: ChatConnection,
+    _peerUsername: string,
+  ) {
+    // Race lock
+    let initialised = false;
+
+    chatConn.dataChannel?.addEventListener("open", () => {
+      if (initialised) return;
+      // Prevent the next if statement
+      initialised = true;
+      initConversation(chatConn, _peerUsername);
+    });
+
+    // If the event listener was added too late, check the state too
+    if (!initialised && chatConn.dataChannel?.readyState === "open") {
+      initialised = true;
+      initConversation(chatConn, _peerUsername);
+    }
   }
 
   function onChatConnClosed() {
