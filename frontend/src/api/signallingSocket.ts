@@ -3,6 +3,7 @@ import env from "../utils/env";
 import logger from "../utils/logger";
 
 export type ServerToClientEvents = {
+  "blocked": (props: { retryMs: number }) => void
   "assign-name": (username: string) => void;
   "user-list": (users: string[]) => void;
   "rtc-peer-not-found": (peerUsername: string) => void;

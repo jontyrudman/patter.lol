@@ -1,11 +1,12 @@
 import { createServer } from "http";
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
 // @ts-ignore
 import Moniker from "moniker";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
+import { RateLimiterMemory } from "rate-limiter-flexible";
 
 // Only use .env files in dev mode
 if (process.env.NODE_ENV === "development") {
@@ -48,6 +49,31 @@ const env = {
   METERED_API_KEY: process.env.METERED_API_KEY,
 };
 
+const rateLimiterWs = new RateLimiterMemory({
+  points: 5, // 5 points
+  duration: 1, // per second
+});
+
+const rateLimiterHttp = new RateLimiterMemory({
+  points: 10, // 10 points
+  duration: 1, // per second
+});
+
+const rateLimiterMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  rateLimiterHttp
+    .consume(req.ip)
+    .then(() => {
+      next();
+    })
+    .catch(() => {
+      res.status(429).send("Too Many Requests");
+    });
+};
+
 function uniqueName() {
   let name = Moniker.choose();
   while (name in connectedUsers) name = Moniker.choose();
@@ -69,6 +95,29 @@ function onConnect(socket: UserSocket) {
   // Send a name to the client
   socket.emit("assign-name", socket.username);
   socket.emit("user-list", Object.keys(connectedUsers));
+}
+
+/**
+ * Throttle socket events per socket session
+ */
+function throttledOn(
+  socket: UserSocket,
+  ev: string,
+  callback: (...args: any) => void
+) {
+  socket.on(ev, (...args) => {
+    // Consume 1 point per event from a given socket
+    rateLimiterWs
+      .consume(socket.id)
+      .then(() => {
+        callback(...args);
+      })
+      .catch((err) => {
+        // no available points to consume
+        // emit error or warning message
+        socket.emit("blocked", { retryMs: err.msBeforeNext });
+      });
+  });
 }
 
 function registerOnDisconnectListener(io: Server, socket: UserSocket) {
@@ -107,7 +156,7 @@ function forwardToRecipient(
 }
 
 function registerChatListeners(socket: UserSocket) {
-  socket.on("chat-request", ({ recipientUsername }) => {
+  throttledOn(socket, "chat-request", ({ recipientUsername }) => {
     console.log(
       "Chat request from %s to %s",
       socket.username,
@@ -118,7 +167,7 @@ function registerChatListeners(socket: UserSocket) {
     });
   });
 
-  socket.on("chat-response", ({ recipientUsername, response }) => {
+  throttledOn(socket, "chat-response", ({ recipientUsername, response }) => {
     console.log(
       "Chat response from %s to %s",
       socket.username,
@@ -130,7 +179,7 @@ function registerChatListeners(socket: UserSocket) {
     });
   });
 
-  socket.on("rtc-offer", ({ recipientUsername, offer }) => {
+  throttledOn(socket, "rtc-offer", ({ recipientUsername, offer }) => {
     console.log("Offer from %s to %s", socket.username, recipientUsername);
     forwardToRecipient(socket, recipientUsername, "rtc-offer", {
       senderUsername: socket.username,
@@ -138,7 +187,7 @@ function registerChatListeners(socket: UserSocket) {
     });
   });
 
-  socket.on("rtc-answer", ({ recipientUsername, answer }) => {
+  throttledOn(socket, "rtc-answer", ({ recipientUsername, answer }) => {
     console.log("Answer from %s to %s", socket.username, recipientUsername);
     forwardToRecipient(socket, recipientUsername, "rtc-answer", {
       senderUsername: socket.username,
@@ -146,17 +195,21 @@ function registerChatListeners(socket: UserSocket) {
     });
   });
 
-  socket.on("rtc-icecandidate", ({ recipientUsername, iceCandidate }) => {
-    console.log(
-      "ICE candidate from %s to %s",
-      socket.username,
-      recipientUsername
-    );
-    forwardToRecipient(socket, recipientUsername, "rtc-icecandidate", {
-      senderUsername: socket.username,
-      iceCandidate,
-    });
-  });
+  throttledOn(
+    socket,
+    "rtc-icecandidate",
+    ({ recipientUsername, iceCandidate }) => {
+      console.log(
+        "ICE candidate from %s to %s",
+        socket.username,
+        recipientUsername
+      );
+      forwardToRecipient(socket, recipientUsername, "rtc-icecandidate", {
+        senderUsername: socket.username,
+        iceCandidate,
+      });
+    }
+  );
 }
 
 /**
@@ -190,6 +243,7 @@ function setupHTTPServer() {
       origin: env.FRONTEND_ORIGIN,
     })
   );
+  expressApp.use(rateLimiterMiddleware);
   expressApp.use(express.json());
 
   expressApp.post("/get-ice-servers", async (_, res) => {

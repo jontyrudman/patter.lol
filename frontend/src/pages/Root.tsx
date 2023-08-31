@@ -56,9 +56,15 @@ export default function Root() {
       chatDispatch({type: "set-user-list", users});
     });
 
+    // TODO: Do something better than this, like emitting with ack
+    signallingSocket.on("blocked", () => {
+      logger.error("The last websocket request was blocked due to being too fast");
+    })
+
     return () => {
       signallingSocket.off("user-list");
       signallingSocket.off("assign-name");
+      signallingSocket.off("blocked");
       rtcHandshakeSignalsOff();
       signallingSocket.disconnect();
     };
