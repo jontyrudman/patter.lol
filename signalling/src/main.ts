@@ -50,12 +50,12 @@ const env = {
 };
 
 const rateLimiterWs = new RateLimiterMemory({
-  points: 5, // 5 points
+  points: 10, // 10 points
   duration: 1, // per second
 });
 
 const rateLimiterHttp = new RateLimiterMemory({
-  points: 10, // 10 points
+  points: 20, // 20 points
   duration: 1, // per second
 });
 
