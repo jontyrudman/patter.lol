@@ -19,7 +19,11 @@ export default function UserList({ onConnect }: UserListProps) {
       )}
       {userList?.map((u: string, index) => {
         if (u === username && userList.length === 1) {
-          return <p className={styles.noOne}>No one online right now :(</p>;
+          return (
+            <p key="userlistitem_noone" className={styles.noOne}>
+              No one online right now :(
+            </p>
+          );
         }
         if (u === username) return null;
         return (
