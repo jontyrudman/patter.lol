@@ -1,11 +1,17 @@
 .UserList {
   height: 100%;
   text-align: left;
-  width: 60%;
+  width: 80%;
   border: 2px solid var(--border-color);
   border-radius: .925em;
   overflow: scroll;
   box-sizing: border-box;
+}
+
+@media screen and (max-width: 40rem) {
+  .UserList {
+    width: 100%;
+  }
 }
 
 .listItem {
