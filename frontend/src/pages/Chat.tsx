@@ -15,6 +15,7 @@ import Form from "../components/Form";
 import { useNavigate, useParams } from "react-router";
 import Username from "../components/Username";
 import logger from "../utils/logger";
+import {connections} from "../api/chat";
 
 function scrollToBottom(ref: RefObject<HTMLElement>) {
   ref.current?.scrollTo({
@@ -95,7 +96,7 @@ export default function Conversation() {
       chatState.username === undefined ||
       !(recipientUsername in chatState.conversations)
     ) {
-      logger.error("You or the peer aren't initialised")
+      logger.error("You or the peer aren't initialised");
       logger.debug(
         recipientUsername,
         chatState.username,
@@ -110,6 +111,15 @@ export default function Conversation() {
     );
   }, [chatState, recipientUsername]);
 
+  const handleEndConversation = () => {
+    if (recipientUsername === undefined) return;
+    Object.entries(connections).forEach(([k, v]) => {
+      if (k === recipientUsername) v.close();
+    });
+
+    chatDispatch({ type: "remove-conversation", recipientUsername });
+  };
+
   return (
     <>
       <Username />
@@ -119,9 +129,13 @@ export default function Conversation() {
           ref={messageHistoryRef}
           onScroll={scrollHandler}
         >
-          <p>
-            You're talking to <b>{recipientUsername}</b>
-          </p>
+          <div className={styles.conversationHeader}>
+            <span>
+              You're talking to <b>{recipientUsername}</b>
+            </span>
+            <Button onClick={handleEndConversation}>End conversation</Button>
+          </div>
+
           {messageHistory.map(({ senderUsername, message: m, timestamp }) => {
             return (
               <Message
@@ -133,6 +147,7 @@ export default function Conversation() {
             );
           })}
         </div>
+
         <Form onSubmit={submitHandler} className={styles.sendForm}>
           <TextInput
             type="text"

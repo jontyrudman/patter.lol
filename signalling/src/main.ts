@@ -19,8 +19,6 @@ if (process.env.NODE_ENV === "development") {
 // TODO: Error handling generally
 // TODO: Log levels
 // TODO: Limit number of duplicate connections
-// TODO: Rate limit socket
-// TODO: Rate limit ICE server endpoint hard
 // TODO: Timeout a user even if not disconnected
 
 interface UserSocket extends Socket {
@@ -163,6 +161,17 @@ function registerChatListeners(socket: UserSocket) {
       recipientUsername
     );
     forwardToRecipient(socket, recipientUsername, "chat-request", {
+      senderUsername: socket.username,
+    });
+  });
+
+  throttledOn(socket, "chat-request-cancelled", ({ recipientUsername }) => {
+    console.log(
+      "Chat request from %s to %s cancelled",
+      socket.username,
+      recipientUsername
+    );
+    forwardToRecipient(socket, recipientUsername, "chat-request-cancelled", {
       senderUsername: socket.username,
     });
   });

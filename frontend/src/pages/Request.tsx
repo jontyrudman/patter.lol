@@ -16,7 +16,6 @@ export default function Request() {
   const { username } = useChatState();
   const navigate = useNavigate();
   const dialogDispatch = useDialogDispatch();
-  // TODO: Add a proper cancellation signal for the signalling server
 
   useEffect(() => {
     if (recipientUsername === undefined) {
@@ -114,6 +113,11 @@ export default function Request() {
     };
   }, []);
 
+  const handleCancel = () => {
+    if (recipientUsername === undefined) return;
+    signallingSocket.emit("chat-request-cancelled", { recipientUsername });
+  }
+
   return (
     <>
       <Username />
@@ -121,7 +125,7 @@ export default function Request() {
         Requesting an audience with <b>{recipientUsername}</b>...
       </p>
       <Link to="/">
-        <Button>Cancel</Button>
+        <Button onClick={handleCancel}>Cancel</Button>
       </Link>
     </>
   );

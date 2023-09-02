@@ -3,7 +3,7 @@ import env from "../utils/env";
 import logger from "../utils/logger";
 
 export type ServerToClientEvents = {
-  "blocked": (props: { retryMs: number }) => void
+  blocked: (props: { retryMs: number }) => void;
   "assign-name": (username: string) => void;
   "user-list": (users: string[]) => void;
   "rtc-peer-not-found": (peerUsername: string) => void;
@@ -40,6 +40,11 @@ export type ServerToClientEvents = {
     senderUsername: string;
     response: "accept" | "reject";
   }) => Promise<void>;
+  "chat-request-cancelled": ({
+    senderUsername,
+  }: {
+    senderUsername: string;
+  }) => Promise<void>;
 };
 
 export type ClientToServerEvents = {
@@ -75,6 +80,11 @@ export type ClientToServerEvents = {
   }: {
     recipientUsername: string;
     response: "accept" | "reject";
+  }) => Promise<void>;
+  "chat-request-cancelled": ({
+    recipientUsername,
+  }: {
+    recipientUsername: string;
   }) => Promise<void>;
 };
 

@@ -22,3 +22,19 @@
   grid-template-columns: 10fr 2fr;
   gap: 1rem;
 }
+
+.conversationHeader {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem;
+}
+
+@media screen and (max-width: 40rem) {
+  .conversationHeader {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0.5rem 1.5rem 0.5rem;
+  }
+}
