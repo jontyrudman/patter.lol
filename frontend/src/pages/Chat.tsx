@@ -15,7 +15,7 @@ import Form from "../components/Form";
 import { useNavigate, useParams } from "react-router";
 import Username from "../components/Username";
 import logger from "../utils/logger";
-import {connections} from "../api/chat";
+import { connections } from "../api/chat";
 
 function scrollToBottom(ref: RefObject<HTMLElement>) {
   ref.current?.scrollTo({
