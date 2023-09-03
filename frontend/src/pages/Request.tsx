@@ -6,7 +6,6 @@ import { useChatState } from "../context";
 import { connections } from "../api/chat";
 import { Link } from "react-router-dom";
 import { signallingSocket } from "../api";
-import Username from "../components/Username";
 import { useDialogDispatch } from "../context/DialogContext";
 import logger from "../utils/logger";
 import env from "../utils/env";

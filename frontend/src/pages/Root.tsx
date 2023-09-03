@@ -9,7 +9,6 @@ import {
   rtcHandshakeSignalsOff,
   rtcHandshakeSignalsOn,
 } from "../api/chat";
-import RequestList from "../components/RequestList";
 import styles from "./Root.module.css";
 import { Outlet, useNavigate } from "react-router";
 import { useDialogDispatch, useDialogState } from "../context/DialogContext";

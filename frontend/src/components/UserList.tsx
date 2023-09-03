@@ -2,8 +2,6 @@ import Button from "./Button";
 import styles from "./UserList.module.css";
 import { useChatState } from "../context";
 import LoadingDots from "./LoadingDots";
-import Break from "./Break";
-import RequestList from "./RequestList";
 
 type UserListProps = {
   onConnect: (username: string) => void;

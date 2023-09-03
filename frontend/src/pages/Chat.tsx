@@ -121,39 +121,45 @@ export default function Conversation() {
 
   return (
     <>
-        <div className={styles.ConversationHistory}>
-          <div className={styles.conversationHeader}>
-            <span>
-              You're talking to <b>{recipientUsername}</b>
-            </span>
-            <Button onClick={handleEndConversation}>End conversation</Button>
-          </div>
-
-          <div className={styles.messages} ref={messagesRef} onScroll={scrollHandler}>
-            {messageHistory.map(({ senderUsername, message: m, timestamp }) => {
-              return (
-                <Message
-                  key={`msg_${senderUsername}_${timestamp}`}
-                  senderUsername={senderUsername}
-                  message={m}
-                  timestamp={timestamp}
-                />
-              );
-            })}
-          </div>
+      <div className={styles.ConversationHistory}>
+        <div className={styles.conversationHeader}>
+          <span>
+            You're talking to <b>{recipientUsername}</b>
+          </span>
+          <Button onClick={handleEndConversation}>End conversation</Button>
         </div>
 
-        <Form onSubmit={submitHandler} className={styles.sendForm}>
-          <TextInput
-            type="text"
-            value={message}
-            required
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setMessage(e.target.value)
-            }
-          />
-          <Button type="submit">Send</Button>
-        </Form>
+        <div
+          className={styles.messages}
+          ref={messagesRef}
+          onScroll={scrollHandler}
+        >
+          {messageHistory.map(({ senderUsername, message: m, timestamp }) => {
+            return (
+              <Message
+                key={`msg_${senderUsername}_${timestamp}`}
+                senderUsername={
+                  senderUsername === chatState.username ? "me" : senderUsername
+                }
+                message={m}
+                timestamp={timestamp}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <Form onSubmit={submitHandler} className={styles.sendForm}>
+        <TextInput
+          type="text"
+          value={message}
+          required
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setMessage(e.target.value)
+          }
+        />
+        <Button type="submit">Send</Button>
+      </Form>
     </>
   );
 }
