@@ -13,7 +13,6 @@ import Button from "../components/Button";
 import TextInput from "../components/TextInput";
 import Form from "../components/Form";
 import { useNavigate, useParams } from "react-router";
-import Username from "../components/Username";
 import logger from "../utils/logger";
 import { connections } from "../api/chat";
 
@@ -30,15 +29,15 @@ export default function Conversation() {
   const [messageHistory, setMessageHistory] = useState([] as ChatMessage[]);
   const [scrolledToLatest, setScrolledToLatest] = useState(true);
   const chatState = useChatState();
-  const messageHistoryRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const chatDispatch = useChatDispatch();
   const navigate = useNavigate();
 
   const scrollHandler = () => {
     if (
-      (messageHistoryRef.current?.scrollTop ?? 0) +
-        (messageHistoryRef.current?.clientHeight ?? 0) ===
-      messageHistoryRef.current?.scrollHeight
+      (messagesRef.current?.scrollTop ?? 0) +
+        (messagesRef.current?.clientHeight ?? 0) ===
+      messagesRef.current?.scrollHeight
     ) {
       setScrolledToLatest(true);
     } else {
@@ -70,7 +69,7 @@ export default function Conversation() {
             scrolledToLatest ||
             messageHistory.slice(-1)[0]?.senderUsername === chatState.username
           ) {
-            scrollToBottom(messageHistoryRef);
+            scrollToBottom(messagesRef);
           }
           document.removeEventListener(
             "visibilitychange",
@@ -85,7 +84,7 @@ export default function Conversation() {
         messageHistory.slice(-1)[0]?.senderUsername === chatState.username
       ) {
         // Scroll to bottom if we sent the message or if the user was already at the bottom before receiving a new message
-        scrollToBottom(messageHistoryRef);
+        scrollToBottom(messagesRef);
       }
     }
   }, [messageHistory]);
@@ -122,12 +121,7 @@ export default function Conversation() {
 
   return (
     <>
-      <div className={styles.ConversationContainer}>
-        <div
-          className={styles.ConversationHistory}
-          ref={messageHistoryRef}
-          onScroll={scrollHandler}
-        >
+        <div className={styles.ConversationHistory}>
           <div className={styles.conversationHeader}>
             <span>
               You're talking to <b>{recipientUsername}</b>
@@ -135,16 +129,18 @@ export default function Conversation() {
             <Button onClick={handleEndConversation}>End conversation</Button>
           </div>
 
-          {messageHistory.map(({ senderUsername, message: m, timestamp }) => {
-            return (
-              <Message
-                key={`msg_${senderUsername}_${timestamp}`}
-                senderUsername={senderUsername}
-                message={m}
-                timestamp={timestamp}
-              />
-            );
-          })}
+          <div className={styles.messages} ref={messagesRef} onScroll={scrollHandler}>
+            {messageHistory.map(({ senderUsername, message: m, timestamp }) => {
+              return (
+                <Message
+                  key={`msg_${senderUsername}_${timestamp}`}
+                  senderUsername={senderUsername}
+                  message={m}
+                  timestamp={timestamp}
+                />
+              );
+            })}
+          </div>
         </div>
 
         <Form onSubmit={submitHandler} className={styles.sendForm}>
@@ -158,7 +154,6 @@ export default function Conversation() {
           />
           <Button type="submit">Send</Button>
         </Form>
-      </div>
     </>
   );
 }
