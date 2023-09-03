@@ -119,14 +119,13 @@ export default function Request() {
   }
 
   return (
-    <>
-      <Username />
+    <div>
       <p>
         Requesting an audience with <b>{recipientUsername}</b>...
       </p>
       <Link to="/">
         <Button onClick={handleCancel}>Cancel</Button>
       </Link>
-    </>
+    </div>
   );
 }

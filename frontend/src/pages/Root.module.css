@@ -1,12 +1,6 @@
-.siteName {
-  font-family: "Space Mono";
-  font-weight: bold;
-  font-style: italic;
-  font-size: 3em;
-  margin: 2rem 0;
-}
-
 .siteWideContainer {
   height: 100%;
   width: 100%;
+  display: grid;
+  grid-auto-rows: auto 1fr;
 }

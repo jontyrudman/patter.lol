@@ -122,7 +122,6 @@ export default function Conversation() {
 
   return (
     <>
-      <Username />
       <div className={styles.ConversationContainer}>
         <div
           className={styles.ConversationHistory}

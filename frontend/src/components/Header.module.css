@@ -1,0 +1,26 @@
+.header {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.5rem 0 1rem 0;
+}
+
+.siteName {
+  font-family: "Space Mono";
+  font-weight: bold;
+  font-style: italic;
+  font-size: 2rem;
+}
+
+.username {
+  font-weight: 400;
+}
+
+@media screen and (max-width: 40rem) {
+  .header {
+    grid-auto-flow: row;
+    justify-content: center;
+  }
+}

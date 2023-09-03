@@ -1,22 +1,15 @@
-.center {
-  display: grid;
-  justify-items: center;
-}
-
 .RequestList {
   display: grid;
   grid-auto-flow: row;
   gap: 1rem;
-  min-height: 4rem;
-  max-height: 7rem;
-  overflow: auto;
-  width: 80%;
+  width: 100%;
   align-items: start;
   padding: 1rem;
-  border: 2px solid var(--border-color);
-  border-radius: .925em;
-  overflow: scroll;
   box-sizing: border-box;
+}
+
+.noOne {
+  text-align: center;
 }
 
 .request {

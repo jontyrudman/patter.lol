@@ -1,9 +1,39 @@
-.ConnectForm {
-  /* Account for title and username */
-  max-height: 30rem;
-  min-height: 5rem;
+.connectContainer {
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 1rem;
   justify-items: center;
+  margin-bottom: 1rem;
+  overflow: auto;
+}
+
+.listTitle {
+  text-align: center;
+  margin: 0.5rem;
+  font-weight: bold;
+}
+
+.usersAndRequests {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  text-align: left;
+  border: 2px solid var(--border-color);
+  border-radius: 0.925em;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: auto;
+}
+
+.users,
+.requests {
+  display: grid;
+  align-content: start;
+  overflow: auto;
+}
+
+.userListContainer,
+.requestListContainer {
+  display: grid;
+  overflow: auto;
 }

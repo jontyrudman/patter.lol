@@ -1,9 +1,9 @@
 import styles from "./Connect.module.css";
-import Form from "../components/Form";
 import { useNavigate } from "react-router";
 import { useChatState } from "../context";
-import Username from "../components/Username";
 import UserList from "../components/UserList";
+import Break from "../components/Break";
+import RequestList from "../components/RequestList";
 
 export default function Connect() {
   const { username } = useChatState();
@@ -13,15 +13,28 @@ export default function Connect() {
     if (recipientUsername === undefined || username === undefined) return;
 
     navigate(`/request/${recipientUsername}`);
-  }
+  };
 
   return (
     <>
-      <Username />
-      <Form className={styles.ConnectForm}>
-        <label>Who do you want to talk to?</label>
-        <UserList onConnect={handleConnect} />
-      </Form>
+      <div className={styles.connectContainer}>
+        Who do you want to talk to?
+        <div className={styles.usersAndRequests}>
+          <span className={styles.users}>
+            <div className={styles.listTitle}>Users online</div>
+            <div className={styles.userListContainer}>
+              <UserList onConnect={handleConnect} />
+            </div>
+          </span>
+          <Break />
+          <div className={styles.requests}>
+            <div className={styles.listTitle}>Incoming requests</div>
+            <div className={styles.requestListContainer}>
+              <RequestList />
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

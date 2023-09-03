@@ -96,8 +96,9 @@ export function rtcHandshakeSignalsOff() {
 }
 
 export function allowPeer(peerUsername: string) {
-  if (allowedPeers.includes(peerUsername)) return;
-  allowedPeers.push(peerUsername);
+  if (!allowedPeers.includes(peerUsername)) {
+    allowedPeers.push(peerUsername);
+  };
   signallingSocket.timeout(env.SIGNALLING_TIMEOUT_MS).emit("chat-response", {
     recipientUsername: peerUsername,
     response: "accept",
