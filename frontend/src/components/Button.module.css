@@ -2,25 +2,31 @@
   font-weight: 600;
   color: var(--button-text-color);
   background-color: var(--button-color);
-  border: 2px solid var(--border-color);
-  border-radius: 0.925em;
-  padding: 0.5em 1em;
-  box-shadow: 0.5em 0.5em var(--button-shadow-color);
+  border: 0.125rem solid var(--border-color);
+  border-radius: 0.925rem;
+  padding: 0.5rem 1rem;
+  filter: drop-shadow(0.25rem 0.25rem 0 var(--border-color));
+  margin: 0 0.25rem 0.25rem 0;
   cursor: pointer;
 }
 
 .Button:hover,
 .Button:focus {
-  outline: 2px solid var(--border-color);
+  border: 0.1875rem solid var(--border-focus-color);
+  margin: -0.0625rem 0.1875rem 0.1875rem -0.0625rem;
+  filter: drop-shadow(0.1875rem 0.1875rem 0 var(--border-color));
 }
 
 /* Two types of active, the standard class is for non-click submit events */
 .Button:active,
 .Button.active {
-  transform: translate(0.25em, 0.25em);
-  box-shadow: 0.25em 0.25em var(--border-focus-color);
-  border: 2px solid var(--border-focus-color);
-  outline: 2px solid var(--border-focus-color);
+  border: 0.1875rem solid var(--border-focus-color);
+  transform: translate(0.1rem, 0.1rem);
+  filter: drop-shadow(0.0875rem 0.0875rem 0 var(--border-focus-color));
+}
+
+.Button.active {
+  margin: 0.0375rem 0.0875rem 0.0875rem 0.0375rem;
 }
 
 .Button:disabled,
@@ -29,8 +35,8 @@
 .Button:disabled:active,
 .Button:disabled:active {
   outline: none;
-  transform: translate(0.25em, 0.25em);
   color: var(--disabled-color);
   border: 2px solid var(--disabled-color);
-  box-shadow: 0.25em 0.25em var(--disabled-color);
+  transform: translate(0.1rem, 0.1rem);
+  filter: drop-shadow(0.0875rem 0.0875rem 0 var(--border-color));
 }
