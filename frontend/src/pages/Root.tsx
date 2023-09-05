@@ -16,6 +16,7 @@ import Dialog, { DialogButtons } from "../components/Dialog";
 import Button from "../components/Button";
 import logger from "../utils/logger";
 import Header from "../components/Header";
+import Back from "../components/Back";
 
 export default function Root() {
   const { username } = useChatState();
@@ -121,6 +122,9 @@ export default function Root() {
         /* @ts-ignore */
         inert={Object.values(dialogState).length > 0 ? "" : undefined}
       >
+        <div className={styles.backButtonContainer}>
+          <Back text="New request" />
+        </div>
         <Header />
         <Outlet />
       </div>
