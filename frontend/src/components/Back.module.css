@@ -41,6 +41,7 @@
 
 .borderContainerCircle:hover,
 .borderContainerPill:hover {
+  transition: margin 0.25s, box-shadow 0.25s;
   cursor: pointer;
   margin: 0 1rem 1rem 0;
   padding: 4px;
@@ -54,7 +55,7 @@
 .borderContainerCircle:active,
 .borderContainerPill:active {
   margin: 0.5rem calc(0.5rem) calc(0.5rem) 0.5rem;
-  box-shadow: 0.75rem 0.5rem rgb(30 30 30 / 0.6);
+  box-shadow: 0.5rem 0.5rem rgb(30 30 30 / 0.6);
   padding: 4px;
   background-color: var(--border-focus-color);
 }
