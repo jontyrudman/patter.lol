@@ -1,0 +1,65 @@
+.borderContainerCircle {
+  border-radius: 50%;
+}
+
+.borderContainerPill {
+  border-radius: calc(1.25rem + 1px);
+}
+
+.borderContainerPill,
+.borderContainerCircle {
+  background-color: var(--border-color);
+  padding: 2px;
+  margin: 2px calc(1rem + 2px) calc(1rem + 2px) 2px;
+  box-shadow: 1rem 1rem rgb(30 30 30 / 0.6);
+}
+
+.circle {
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 50%;
+  display: grid;
+  align-content: center;
+  justify-content: center;
+}
+
+.pill {
+  display: grid;
+  height: 2.5rem;
+  padding: 0 0.8rem;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 1.25rem;
+}
+
+.pill,
+.circle {
+  background-color: var(--dialog-color);
+  border: none;
+}
+
+.borderContainerCircle:hover,
+.borderContainerPill:hover {
+  cursor: pointer;
+  margin: 0 1rem 1rem 0;
+  padding: 4px;
+  background-color: var(--border-focus-color);
+}
+
+.borderContainerPill:hover {
+  border-radius: calc(1.25rem + 4px);
+}
+
+.borderContainerCircle:active,
+.borderContainerPill:active {
+  margin: 0.5rem calc(0.5rem) calc(0.5rem) 0.5rem;
+  box-shadow: 0.75rem 0.5rem rgb(30 30 30 / 0.6);
+  padding: 4px;
+  background-color: var(--border-focus-color);
+}
+
+.circle:hover,
+.pill:hover {
+  cursor: pointer;
+}
