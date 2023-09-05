@@ -1,4 +1,5 @@
 .Dialog {
+  color: var(--text-color);
   padding: 1rem 2rem;
   border: 2px solid var(--border-color);
   border-radius: .925em;
