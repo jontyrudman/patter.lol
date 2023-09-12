@@ -1,6 +1,6 @@
 import { isRouteErrorResponse, useRouteError } from "react-router-dom";
 import logger from "../utils/logger";
-import styles from "./Root.module.css";
+import styles from "../components/Header.module.css";
 
 export default function ErrorBoundary() {
   const error = useRouteError();
