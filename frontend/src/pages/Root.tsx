@@ -70,7 +70,7 @@ export default function Root() {
       rtcHandshakeSignalsOff();
       signallingSocket.disconnect();
     };
-  }, []);
+  }, [chatDispatch, dialogDispatch]);
 
   useEffect(() => {
     signallingSocket.on("chat-request", async ({ senderUsername }) => {
@@ -95,7 +95,7 @@ export default function Root() {
     return () => {
       signallingSocket.off("chat-request");
     };
-  }, [username]);
+  }, [username, chatDispatch, navigate]);
 
   return (
     <>

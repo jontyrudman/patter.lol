@@ -1,4 +1,4 @@
-import { Root, Request, Chat } from "./pages";
+import { Root, Request, Conversation } from "./pages";
 import { createBrowserRouter } from "react-router-dom";
 import Connect from "./pages/Connect";
 import Handshake from "./pages/Handshake";
@@ -28,7 +28,7 @@ const router = createBrowserRouter([
       {
         // Chat with recipient
         path: "chat/:recipientUsername",
-        element: <Chat />,
+        element: <Conversation />,
       },
       {
         path: "about",
