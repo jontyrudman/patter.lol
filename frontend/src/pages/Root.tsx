@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
 import { useEffect } from "react";
 import { signallingSocket } from "../api";
-import { useChatDispatch, useChatState } from "../context";
+import { useChatDispatch } from "../context";
 import {
   allowPeer,
   blockPeer,
