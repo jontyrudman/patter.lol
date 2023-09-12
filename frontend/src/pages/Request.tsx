@@ -16,6 +16,8 @@ export default function Request() {
   const navigate = useNavigate();
   const dialogDispatch = useDialogDispatch();
 
+  // TODO: Add a timeout counter for cancelling
+
   useEffect(() => {
     if (recipientUsername === undefined) {
       navigate("/");

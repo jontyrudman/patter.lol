@@ -17,12 +17,14 @@ import Header from "../components/Header";
 import AnimatedOutlet from "../layouts/AnimatedOutlet";
 import AnimatedDialogs from "../layouts/AnimatedDialogs";
 
-export default function Root() {
-  const { username } = useChatState();
+/**
+ * Sets up the signalling server to handle our connection,
+ * handshake and chat request events.
+ */
+function useSignallingServerSetup() {
   const chatDispatch = useChatDispatch();
-  const navigate = useNavigate();
-  const dialogState = useDialogState();
   const dialogDispatch = useDialogDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     signallingSocket.connect();
@@ -63,16 +65,6 @@ export default function Root() {
       );
     });
 
-    return () => {
-      signallingSocket.off("user-list");
-      signallingSocket.off("assign-name");
-      signallingSocket.off("blocked");
-      rtcHandshakeSignalsOff();
-      signallingSocket.disconnect();
-    };
-  }, [chatDispatch, dialogDispatch]);
-
-  useEffect(() => {
     signallingSocket.on("chat-request", async ({ senderUsername }) => {
       if (senderUsername in connections)
         logger.error(`Connection already open for peer ${senderUsername}`);
@@ -92,18 +84,40 @@ export default function Root() {
       });
     });
 
+    signallingSocket.on(
+      "chat-request-cancelled",
+      async ({ senderUsername }) => {
+        chatDispatch({
+          type: "remove-request",
+          requestorUsername: senderUsername,
+        });
+      },
+    );
+
     return () => {
+      signallingSocket.off("user-list");
+      signallingSocket.off("assign-name");
+      signallingSocket.off("blocked");
       signallingSocket.off("chat-request");
+      signallingSocket.off("chat-request-cancelled");
+      rtcHandshakeSignalsOff();
+      signallingSocket.disconnect();
     };
-  }, [username, chatDispatch, navigate]);
+  }, [chatDispatch, dialogDispatch, navigate]);
+}
+
+export default function Root() {
+  const dialogState = useDialogState();
+  useSignallingServerSetup();
 
   return (
     <>
       <AnimatedDialogs />
       <div
         className={styles.siteWideContainer}
-        /* @ts-ignore */
-        inert={Object.values(dialogState).length > 0 ? "" : undefined}
+        ref={node => node && (Object.values(dialogState).length > 0 ?
+          node.setAttribute('inert', '') : node.removeAttribute('inert')
+        )}
       >
         <Header />
         <AnimatedOutlet />
