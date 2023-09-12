@@ -79,7 +79,7 @@ export default function Request() {
             ],
           },
         });
-      }
+      },
     );
 
     try {
@@ -115,7 +115,7 @@ export default function Request() {
   const handleCancel = () => {
     if (recipientUsername === undefined) return;
     signallingSocket.emit("chat-request-cancelled", { recipientUsername });
-  }
+  };
 
   return (
     <div>

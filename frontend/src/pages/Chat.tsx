@@ -73,7 +73,7 @@ export default function Conversation() {
           }
           document.removeEventListener(
             "visibilitychange",
-            scrollToBottomOnVisible
+            scrollToBottomOnVisible,
           );
         }
       };
@@ -99,14 +99,14 @@ export default function Conversation() {
       logger.debug(
         recipientUsername,
         chatState.username,
-        chatState.conversations
+        chatState.conversations,
       );
       navigate("/");
       return;
     }
 
     setMessageHistory(
-      [...chatState.conversations[recipientUsername]?.historyBuffer] ?? []
+      [...chatState.conversations[recipientUsername]?.historyBuffer] ?? [],
     );
   }, [chatState, recipientUsername]);
 

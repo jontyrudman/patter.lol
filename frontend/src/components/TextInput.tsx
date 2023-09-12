@@ -8,7 +8,7 @@ const TextInput = forwardRef<HTMLInputElement, any>(
         {children}
       </input>
     );
-  }
+  },
 );
 
 export default TextInput;

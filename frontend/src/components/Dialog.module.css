@@ -2,7 +2,7 @@
   color: var(--text-color);
   padding: 1rem 2rem;
   border: 2px solid var(--border-color);
-  border-radius: .925em;
+  border-radius: 0.925em;
   box-shadow: 1em 1em rgb(10 10 10 / 0.8);
   position: absolute;
   top: 4rem;

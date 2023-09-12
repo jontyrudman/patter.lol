@@ -22,16 +22,12 @@ export default function RequestList() {
           type: "remove-request",
           requestorUsername: senderUsername,
         });
-      }
+      },
     );
   });
 
   if (Object.values(requests).length === 0) {
-    return (
-      <p className={styles.noOne}>
-        No requests
-      </p>
-    );
+    return <p className={styles.noOne}>No requests</p>;
   }
 
   return (
@@ -51,7 +47,7 @@ export default function RequestList() {
               </Button>
             </div>
           </div>
-        )
+        ),
       )}
     </div>
   );

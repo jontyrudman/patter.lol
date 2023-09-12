@@ -5,7 +5,7 @@ import Break from "../components/Break";
 import RequestList from "../components/RequestList";
 
 export default function Connect() {
-  const {pathname} = useLocation();
+  const { pathname } = useLocation();
   return (
     <div className={styles.connectContainer}>
       Who do you want to talk to?

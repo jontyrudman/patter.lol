@@ -16,7 +16,7 @@ export default function ErrorBoundary() {
           <code>{error.statusText}</code>
         </>
       )}
-      {(error instanceof Error) && (
+      {error instanceof Error && (
         <>
           <br />
           <code>{error.message}</code>

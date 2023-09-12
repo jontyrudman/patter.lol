@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 
 export default function LoadingDots() {
   const [dots, setDots] = useState("");
@@ -13,12 +13,10 @@ export default function LoadingDots() {
       setDots(dots.concat("."));
     }, 250);
 
-    return () => { clearTimeout(id) };
+    return () => {
+      clearTimeout(id);
+    };
   }, [dots]);
 
-  return (
-    <>
-      {dots}
-    </>
-  )
+  return <>{dots}</>;
 }

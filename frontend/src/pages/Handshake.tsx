@@ -37,7 +37,10 @@ export default function Handshake() {
               text: "Okay :(",
               onClick: () => {
                 chatConn.close();
-                chatDispatch({type: "remove-conversation", recipientUsername: _peerUsername})
+                chatDispatch({
+                  type: "remove-conversation",
+                  recipientUsername: _peerUsername,
+                });
                 dialogDispatch({ type: "close-dialog", id });
                 navigate("/");
               },

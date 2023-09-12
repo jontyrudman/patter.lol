@@ -10,7 +10,7 @@ export default function Header() {
 
   useEffect(() => {
     signallingSocket.on("assign-name", (name) =>
-      chatDispatch({ type: "set-username", username: name })
+      chatDispatch({ type: "set-username", username: name }),
     );
 
     return () => {

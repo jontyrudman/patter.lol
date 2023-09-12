@@ -7,7 +7,7 @@ import logger from "../utils/logger";
 type CloseCallback = () => void;
 type AnswerCallback = (
   chatConnection: ChatConnection,
-  answer: RTCSessionDescriptionInit
+  answer: RTCSessionDescriptionInit,
 ) => void;
 type DataChannelCreatedCallback = (chatConnection: ChatConnection) => void;
 
@@ -66,7 +66,7 @@ export function rtcHandshakeSignalsOn() {
       chatConn.answerCallback(chatConn, answer);
     } else {
       logger.debug(
-        `Failed to accept answer. No connection open with ${senderUsername}`
+        `Failed to accept answer. No connection open with ${senderUsername}`,
       );
     }
   });
@@ -77,15 +77,15 @@ export function rtcHandshakeSignalsOn() {
     async ({ senderUsername, iceCandidate }) => {
       if (senderUsername in connections) {
         connections[senderUsername].peerConnection.addIceCandidate(
-          iceCandidate
+          iceCandidate,
         );
       } else {
         logger.debug(
-          `Received ICE candidate early. No connection open with ${senderUsername} (yet).`
+          `Received ICE candidate early. No connection open with ${senderUsername} (yet).`,
         );
         iceCandidateQueue[senderUsername].push(iceCandidate);
       }
-    }
+    },
   );
 }
 
@@ -98,7 +98,7 @@ export function rtcHandshakeSignalsOff() {
 export function allowPeer(peerUsername: string) {
   if (!allowedPeers.includes(peerUsername)) {
     allowedPeers.push(peerUsername);
-  };
+  }
   signallingSocket.timeout(env.SIGNALLING_TIMEOUT_MS).emit("chat-response", {
     recipientUsername: peerUsername,
     response: "accept",
@@ -125,7 +125,7 @@ type SendOfferProps = {
   recipientUsername: string;
   onAnswer: (
     chatConnection: ChatConnection,
-    answer: RTCSessionDescriptionInit
+    answer: RTCSessionDescriptionInit,
   ) => void;
   onDataChannelCreated: DataChannelCreatedCallback;
   onClose?: CloseCallback;
@@ -167,7 +167,7 @@ export async function sendOffer({
 }
 
 export function onOffer(
-  callback: (senderUsername: string, offer: RTCSessionDescriptionInit) => void
+  callback: (senderUsername: string, offer: RTCSessionDescriptionInit) => void,
 ): void {
   offerCallback = callback;
 }
@@ -196,7 +196,7 @@ export async function acceptOffer({
 
   // Send answer
   chatConn.peerConnection.setRemoteDescription(
-    new RTCSessionDescription(offer)
+    new RTCSessionDescription(offer),
   );
   const answer = await chatConn.peerConnection.createAnswer();
   await chatConn.peerConnection.setLocalDescription(answer);
