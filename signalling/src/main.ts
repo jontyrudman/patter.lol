@@ -127,6 +127,11 @@ function registerOnDisconnectListener(io: Server, socket: UserSocket) {
       socket.handshake.address
     );
 
+    // Cancel any pending requests from this user
+    socket.broadcast.emit("chat-request-cancelled", {
+      senderUsername: socket.username,
+    });
+
     delete connectedUsers[socket.username];
     broadcastUserList(io);
   });
