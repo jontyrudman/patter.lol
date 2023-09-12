@@ -257,7 +257,7 @@ function setupHTTPServer() {
 
   expressApp.post("/get-ice-servers", async (_, res) => {
     const iceServers = await getIceServers();
-    console.log("Sending ICE servers: %s", JSON.stringify(iceServers));
+    console.log("Sending ICE servers");
     res.json({ iceServers: iceServers });
   });
 }
