@@ -110,17 +110,18 @@ export default function Conversation() {
     );
   }, [chatState, recipientUsername]);
 
-  const handleEndConversation = () => {
+  const handleEndConversation = async () => {
     if (recipientUsername === undefined) return;
     Object.entries(connections).forEach(([k, v]) => {
       if (k === recipientUsername) v.close();
     });
 
     chatDispatch({ type: "remove-conversation", recipientUsername });
+    navigate("/");
   };
 
   return (
-    <>
+    <div className={styles.ConversationContainer}>
       <div className={styles.ConversationHistory}>
         <div className={styles.conversationHeader}>
           <span>
@@ -160,6 +161,6 @@ export default function Conversation() {
         />
         <Button type="submit">Send</Button>
       </Form>
-    </>
+    </div>
   );
 }

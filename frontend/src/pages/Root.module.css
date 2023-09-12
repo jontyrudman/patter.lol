@@ -4,3 +4,7 @@
   display: grid;
   grid-auto-rows: auto 1fr;
 }
+
+.main {
+  display: grid;
+}
