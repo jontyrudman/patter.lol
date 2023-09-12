@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 import Connect from "./pages/Connect";
 import Handshake from "./pages/Handshake";
 import ErrorBoundary from "./pages/ErrorBoundary";
+import About from "./pages/About";
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
         path: "chat/:recipientUsername",
         element: <Chat />,
       },
+      {
+        path: "about",
+        element: <About />,
+      }
     ],
   },
 ]);

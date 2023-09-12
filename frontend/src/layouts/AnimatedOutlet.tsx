@@ -5,6 +5,7 @@ import { useLocation, useOutlet } from "react-router";
 import styles from "./AnimatedOutlet.module.css";
 
 const pageOrder: { [key: string]: number } = {
+  "/about": -1,
   "/": 0,
   "/request": 1,
   "/handshake": 2,
@@ -79,6 +80,8 @@ export default function AnimatedOutlet() {
       curPage = "/handshake";
     } else if (locationState.pathname.startsWith("/chat")) {
       curPage = "/chat";
+    } else if (locationState.pathname.startsWith("/about")) {
+      curPage = "/about";
     }
 
     if (prevPage !== null && pageOrder[prevPage] > pageOrder[curPage]) {

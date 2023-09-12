@@ -2,6 +2,7 @@ import styles from "./Connect.module.css";
 import UserList from "../components/UserList";
 import Break from "../components/Break";
 import RequestList from "../components/RequestList";
+import { Link } from "react-router-dom";
 
 export default function Connect() {
   return (
@@ -22,6 +23,7 @@ export default function Connect() {
           </div>
         </div>
       </div>
+      <Link to="/about">About patter.lol</Link>
     </div>
   );
 }
