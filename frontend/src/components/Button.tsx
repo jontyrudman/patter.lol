@@ -20,7 +20,10 @@ const Button = forwardRef<HTMLButtonElement, any>(
 
     useEffect(() => {
       if (loadingText !== undefined) {
-        const loadingTextWidth = getTextWidth(loadingText + "...", "600 16px / 24px Inter");
+        const loadingTextWidth = getTextWidth(
+          loadingText + "...",
+          "600 16px / 24px Inter",
+        );
         setStyle({
           width: `calc(${loadingTextWidth})`,
           textAlign: isLoading ? "left" : "center",
@@ -47,7 +50,7 @@ const Button = forwardRef<HTMLButtonElement, any>(
         )}
       </button>
     );
-  }
+  },
 );
 
 export default Button;

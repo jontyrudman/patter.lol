@@ -1,12 +1,10 @@
-import Button from "./Button";
 import styles from "./UserList.module.css";
 import { useChatState } from "../context";
 import LoadingDots from "./LoadingDots";
+import { Link } from "react-router-dom";
+import Button from "./Button";
 
-type UserListProps = {
-  onConnect: (username: string) => void;
-};
-export default function UserList({ onConnect }: UserListProps) {
+export default function UserList() {
   const { userList, username } = useChatState();
 
   return (
@@ -31,7 +29,9 @@ export default function UserList({ onConnect }: UserListProps) {
             <span>
               <b>{u}</b>
             </span>
-            <Button onClick={() => onConnect(u)}>Connect</Button>
+            <Link to={`/request/${u}`}>
+              <Button>Connect</Button>
+            </Link>
           </div>
         );
       })}

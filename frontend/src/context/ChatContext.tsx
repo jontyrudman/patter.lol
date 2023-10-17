@@ -74,7 +74,7 @@ type ChatDispatchActionMap = {
 };
 function chatReducer(
   chats: ChatContextState,
-  action: ChatDispatchAction<ChatDispatchActionType>
+  action: ChatDispatchAction<ChatDispatchActionType>,
 ): ChatContextState {
   switch (action.type) {
     case "set-username": {
@@ -98,7 +98,7 @@ function chatReducer(
     }
     case "receive-message": {
       logger.info(
-        `New message from ${action.senderUsername}: ${action.message}`
+        `New message from ${action.senderUsername}: ${action.message}`,
       );
       if (!(action.senderUsername in chats.conversations)) {
         logger.error(`No conversation open with ${action.senderUsername}`);
@@ -133,14 +133,14 @@ function chatReducer(
 
       chatConnection.dataChannel?.send(action.message);
       newChats.conversations[action.recipientUsername].historyBuffer.push(
-        outgoingMessage
+        outgoingMessage,
       );
 
       return newChats;
     }
     case "new-request": {
       logger.info(
-        `Logging new chat request from ${action.requestorUsername}...`
+        `Logging new chat request from ${action.requestorUsername}...`,
       );
       const newChats = { ...chats };
       newChats.requests[action.requestorUsername] = {

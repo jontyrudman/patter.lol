@@ -40,7 +40,7 @@ type DialogDispatchActionMap = {
 };
 function chatReducer(
   dialogs: DialogContextState,
-  action: DialogDispatchAction<DialogDispatchActionType>
+  action: DialogDispatchAction<DialogDispatchActionType>,
 ): DialogContextState {
   switch (action.type) {
     case "open-dialog": {

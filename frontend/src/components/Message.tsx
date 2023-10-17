@@ -22,7 +22,8 @@ export default function Message({
       </div>
       <div>{message}</div>
       <div style={{ textAlign: "right" }}>
-        {!today && `${datetime.toLocaleDateString()} `}{datetime.toLocaleTimeString()}
+        {!today && `${datetime.toLocaleDateString()} `}
+        {datetime.toLocaleTimeString()}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { PropsWithChildren } from "react";
 import styles from "./Dialog.module.css";
 
@@ -14,21 +15,30 @@ export default function Dialog({
   children,
 }: DialogProps) {
   return (
-    <dialog
+    <motion.dialog
       className={styles.Dialog}
-      style={{ top: `calc(4rem + ${offsetY ?? 0}px)`, left: `${offsetX ?? 0}px` }}
+      style={{
+        top: `calc(4rem + ${offsetY ?? 0}px)`,
+        left: `${offsetX ?? 0}px`,
+      }}
       open={open}
       aria-modal
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ opacity: 0 }}
     >
       {children}
-    </dialog>
+    </motion.dialog>
   );
 }
 
-export function DialogButtons({children}: PropsWithChildren) {
-  return (
-    <div className={styles.DialogButtons}>
-      {children}
-    </div>
-  );
+/**
+ * Wrap around Dialogs to get their animations to happen.
+ */
+export function AnimateDialogs({ children }: PropsWithChildren) {
+  return <AnimatePresence>{children}</AnimatePresence>;
+}
+
+export function DialogButtons({ children }: PropsWithChildren) {
+  return <div className={styles.DialogButtons}>{children}</div>;
 }

@@ -14,10 +14,11 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 
+  --accent-color: #bb97d8;
   --text-color: lightgrey;
   --bg-color: black;
   --border-color: lightgrey;
-  --border-focus-color: #bb97d8;
+  --border-focus-color: var(--accent-color);
 
   --button-color: black;
   --button-text-color: lightgrey;
@@ -27,7 +28,7 @@
   --input-shadow-color: lightgrey;
   --disabled-color: #9a9a9a;
   --dialog-color: #111;
-  
+
   --app-width: 100vw;
   --app-height: 100vh;
   /* Account for UI elements on mobile */
@@ -63,11 +64,19 @@ button {
 a {
   font-weight: 500;
   text-decoration: inherit;
+  color: var(--accent-color);
+  filter: brightness(1.2);
 }
-/*
-a:hover {
+
+a:active {
+  color: var(--accent-color);
+  filter: brightness(1.5);
 }
-*/
+
+a:visited {
+  color: var(--accent-color);
+  filter: brightness(1.2);
+}
 
 body {
   margin: 0;

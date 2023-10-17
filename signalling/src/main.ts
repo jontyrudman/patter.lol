@@ -127,6 +127,11 @@ function registerOnDisconnectListener(io: Server, socket: UserSocket) {
       socket.handshake.address
     );
 
+    // Cancel any pending requests from this user
+    socket.broadcast.emit("chat-request-cancelled", {
+      senderUsername: socket.username,
+    });
+
     delete connectedUsers[socket.username];
     broadcastUserList(io);
   });
@@ -257,7 +262,7 @@ function setupHTTPServer() {
 
   expressApp.post("/get-ice-servers", async (_, res) => {
     const iceServers = await getIceServers();
-    console.log("Sending ICE servers: %s", JSON.stringify(iceServers));
+    console.log("Sending ICE servers");
     res.json({ iceServers: iceServers });
   });
 }

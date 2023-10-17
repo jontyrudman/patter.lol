@@ -29,7 +29,7 @@ const Form = forwardRef<HTMLFormElement, any>(
         {children}
       </form>
     );
-  }
+  },
 );
 
 export default Form;

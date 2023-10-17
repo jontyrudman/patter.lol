@@ -1,16 +1,17 @@
 import { v4 as uuid } from "uuid";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { ChatConnection, acceptOffer, onOffer, sendOffer } from "../api/chat";
 import { useChatDispatch, useChatState } from "../context";
 import { useDialogDispatch } from "../context/DialogContext";
 
 export default function Handshake() {
-  const { peerUsername, isInitiating } = useLocation().state;
+  const { state: locationState } = useLocation();
   const navigate = useNavigate();
   const { username } = useChatState();
   const chatDispatch = useChatDispatch();
   const dialogDispatch = useDialogDispatch();
+  const [frozenState, setFrozenState] = useState<any>({});
 
   function initConversation(chatConn: ChatConnection, _peerUsername: string) {
     chatDispatch({
@@ -36,7 +37,10 @@ export default function Handshake() {
               text: "Okay :(",
               onClick: () => {
                 chatConn.close();
-                chatDispatch({type: "remove-conversation", recipientUsername: _peerUsername})
+                chatDispatch({
+                  type: "remove-conversation",
+                  recipientUsername: _peerUsername,
+                });
                 dialogDispatch({ type: "close-dialog", id });
                 navigate("/");
               },
@@ -77,23 +81,29 @@ export default function Handshake() {
   }
 
   useEffect(() => {
+    if (locationState !== null) {
+      setFrozenState(locationState);
+    }
+  }, [locationState]);
+
+  useEffect(() => {
     if (username === null) {
       navigate("/");
       return;
     }
 
-    if (isInitiating === true) {
+    if (frozenState.isInitiating === true) {
       sendOffer({
         myUsername: username,
-        recipientUsername: peerUsername,
+        recipientUsername: frozenState.peerUsername,
         onAnswer: () => {},
         onDataChannelCreated: (chatConn) =>
-          onDataChannelCreated(chatConn, peerUsername),
+          onDataChannelCreated(chatConn, frozenState.peerUsername),
         onClose: onChatConnClosed,
       });
-    } else if (isInitiating === false) {
+    } else if (frozenState.isInitiating === false) {
       onOffer((senderUsername, offer) => {
-        if (peerUsername !== senderUsername)
+        if (frozenState.peerUsername !== senderUsername)
           throw Error("Offer received from different peer");
         if (username === null) throw Error("Username null");
         acceptOffer({
@@ -106,7 +116,7 @@ export default function Handshake() {
         });
       });
     }
-  }, []);
+  }, [frozenState]);
 
-  return <p>Shaking the hand of {peerUsername}...</p>;
+  return <p>Shaking the hand of {frozenState.peerUsername}...</p>;
 }

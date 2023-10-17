@@ -1,0 +1,20 @@
+.aboutContainer {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-content: space-between;
+  justify-items: center;
+  padding: 0 1rem;
+  overflow-y: auto;
+}
+
+.textContainer {
+  max-width: 30rem;
+}
+
+.textContainer h2 {
+  margin-top: 0.4rem;
+}
+
+.footer {
+  padding: 1rem;
+}

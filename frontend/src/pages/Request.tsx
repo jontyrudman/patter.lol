@@ -16,6 +16,8 @@ export default function Request() {
   const navigate = useNavigate();
   const dialogDispatch = useDialogDispatch();
 
+  // TODO: Add a timeout counter for cancelling
+
   useEffect(() => {
     if (recipientUsername === undefined) {
       navigate("/");
@@ -79,7 +81,7 @@ export default function Request() {
             ],
           },
         });
-      }
+      },
     );
 
     try {
@@ -115,7 +117,7 @@ export default function Request() {
   const handleCancel = () => {
     if (recipientUsername === undefined) return;
     signallingSocket.emit("chat-request-cancelled", { recipientUsername });
-  }
+  };
 
   return (
     <div>

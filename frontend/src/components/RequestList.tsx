@@ -1,8 +1,6 @@
 import Button from "./Button";
 import { useChatDispatch, useChatState } from "../context";
 import styles from "./RequestList.module.css";
-import { useEffect } from "react";
-import { signallingSocket } from "../api";
 
 export default function RequestList() {
   const { requests } = useChatState();
@@ -12,26 +10,8 @@ export default function RequestList() {
     chatDispatch({ type: "remove-request", requestorUsername });
   };
 
-  // TODO: Add a timeout counter
-
-  useEffect(() => {
-    signallingSocket.on(
-      "chat-request-cancelled",
-      async ({ senderUsername }) => {
-        chatDispatch({
-          type: "remove-request",
-          requestorUsername: senderUsername,
-        });
-      }
-    );
-  });
-
   if (Object.values(requests).length === 0) {
-    return (
-      <p className={styles.noOne}>
-        No requests
-      </p>
-    );
+    return <p className={styles.noOne}>No requests</p>;
   }
 
   return (
@@ -51,7 +31,7 @@ export default function RequestList() {
               </Button>
             </div>
           </div>
-        )
+        ),
       )}
     </div>
   );
