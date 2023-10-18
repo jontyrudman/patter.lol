@@ -2,7 +2,7 @@ import { v4 as uuid } from "uuid";
 import { useNavigate, useParams } from "react-router";
 import Button from "../components/Button";
 import { useEffect } from "react";
-import { useChatState } from "../context";
+import { useChatDispatch, useChatState } from "../context";
 import { connections } from "../api/chat";
 import { Link } from "react-router-dom";
 import { signallingSocket } from "../api";
@@ -12,7 +12,8 @@ import env from "../utils/env";
 
 export default function Request() {
   const { recipientUsername } = useParams();
-  const { username } = useChatState();
+  const { username, requests } = useChatState();
+  const chatDispatch = useChatDispatch();
   const navigate = useNavigate();
   const dialogDispatch = useDialogDispatch();
 
@@ -22,6 +23,12 @@ export default function Request() {
     if (recipientUsername === undefined) {
       navigate("/");
       return;
+    }
+
+    // If there's a request from this user that we haven't accepted, accept it
+    if (recipientUsername in requests) {
+      requests[recipientUsername].accept();
+      chatDispatch({ type: "remove-request", requestorUsername: recipientUsername });
     }
 
     signallingSocket.on("rtc-peer-not-found", (peerUsername) => {
