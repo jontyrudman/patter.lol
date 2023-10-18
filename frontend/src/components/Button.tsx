@@ -12,10 +12,11 @@ interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
   children: any;
   isLoading: boolean | undefined;
   loadingText: string | undefined;
+  alertDot: boolean;
 }
 
 const Button = forwardRef<HTMLButtonElement, any>(
-  ({ children, isLoading, loadingText, ...other }: ButtonProps, ref) => {
+  ({ children, isLoading, loadingText, alertDot = false, ...other }: ButtonProps, ref) => {
     const [style, setStyle] = useState({});
 
     useEffect(() => {
@@ -40,6 +41,9 @@ const Button = forwardRef<HTMLButtonElement, any>(
         className={styles.Button}
         {...other}
       >
+        {alertDot && (
+          <div className={styles.dot} />
+        )}
         {isLoading === true && loadingText !== undefined ? (
           <>
             {loadingText}
