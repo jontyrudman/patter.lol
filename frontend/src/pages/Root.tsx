@@ -14,7 +14,6 @@ import { useNavigate } from "react-router";
 import { useDialogDispatch, useDialogState } from "../context/DialogContext";
 import logger from "../utils/logger";
 import Header from "../components/Header";
-import Back from "../components/Back";
 import AnimatedOutlet from "../layouts/AnimatedOutlet";
 import AnimatedDialogs from "../layouts/AnimatedDialogs";
 

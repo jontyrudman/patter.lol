@@ -1,6 +1,5 @@
 import { Dispatch, createContext, useContext, useReducer } from "react";
 import { chat } from "../api";
-import { v4 as uuid } from "uuid";
 import logger from "../utils/logger";
 
 export type ChatRequest = {

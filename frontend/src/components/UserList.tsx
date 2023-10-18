@@ -49,7 +49,7 @@ function ChatWithUser({
 }
 
 export default function UserList() {
-  const { userList, username: myUsername, conversations } = useChatState();
+  const { userList, username: myUsername } = useChatState();
 
   return (
     <div className={styles.UserList}>
@@ -64,7 +64,6 @@ export default function UserList() {
           return (
             <ChatWithUser
               username={u}
-              openConversations={conversations}
               key={`userlist_item_${index}`}
             />
           );
