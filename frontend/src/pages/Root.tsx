@@ -120,9 +120,6 @@ export default function Root() {
           node.setAttribute('inert', '') : node.removeAttribute('inert')
         )}
       >
-        <div className={styles.backButtonContainer}>
-          <Back text="New request" />
-        </div>
         <Header />
         <AnimatedOutlet />
       </div>

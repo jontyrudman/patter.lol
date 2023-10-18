@@ -12,9 +12,12 @@ import Message from "../components/Message";
 import Button from "../components/Button";
 import TextInput from "../components/TextInput";
 import Form from "../components/Form";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate, useParams } from "react-router";
 import logger from "../utils/logger";
 import { connections } from "../api/chat";
+import { Link } from "react-router-dom";
 
 function scrollToBottom(ref: RefObject<HTMLElement>) {
   ref.current?.scrollTo({
@@ -58,7 +61,8 @@ function useMessageHistory(recipientUsername: string | undefined) {
 
 function useScrollToBottom(
   messageHistory: ChatMessage[],
-  messagesContainerRef: RefObject<HTMLDivElement>
+  messagesContainerRef: RefObject<HTMLDivElement>,
+  dismissAlert: () => void,
 ) {
   const chatState = useChatState();
   const atBottom = useRef(true);
@@ -67,7 +71,7 @@ function useScrollToBottom(
   const trackScroll = () => {
     if (
       (messagesContainerRef.current?.scrollTop ?? 0) +
-        (messagesContainerRef.current?.clientHeight ?? 0) ===
+      (messagesContainerRef.current?.clientHeight ?? 0) ===
       messagesContainerRef.current?.scrollHeight
     ) {
       atBottom.current = true;
@@ -94,11 +98,12 @@ function useScrollToBottom(
         messageHistory.slice(-1)[0]?.senderUsername === chatState.username
       ) {
         scrollToBottom(messagesContainerRef);
+        dismissAlert();
       }
     };
 
     if (document.hidden) {
-      const scrollToBottomOnVisible = function () {
+      const scrollToBottomOnVisible = function() {
         if (!document.hidden && atBottom.current) {
           scrollToBottomConditional();
           document.removeEventListener(
@@ -116,17 +121,53 @@ function useScrollToBottom(
   return { trackScroll };
 }
 
+function Back({ currentRecipient }: { currentRecipient?: string }) {
+  const { alerts } = useChatState();
+  const newRequest = alerts.requestFrom.size > 0 && !(currentRecipient && alerts.requestFrom.has(currentRecipient) && alerts.requestFrom.size === 1);
+  const newMessage = alerts.messageFrom.size > 0 && !(currentRecipient && alerts.messageFrom.has(currentRecipient) && alerts.messageFrom.size === 1);
+
+  let text;
+  if (newRequest)
+    text = "New request";
+
+  // Messages have priority
+  if (newMessage)
+    text = "New message";
+
+  return (
+    <Link to="/">
+      <Button alertDot={text != undefined}>
+        <FontAwesomeIcon icon={faArrowLeft} />
+        {text ? (
+          <span style={{ marginLeft: '0.5rem' }}>
+            {text}
+          </span>
+        ) : (
+          null
+        )}
+      </Button>
+    </Link>
+  );
+}
+
 export default function Conversation() {
   const { recipientUsername } = useParams();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messageHistory = useMessageHistory(recipientUsername);
-  const { trackScroll } = useScrollToBottom(
-    messageHistory,
-    messagesContainerRef
-  );
   const chatState = useChatState();
   const navigate = useNavigate();
   const chatDispatch = useChatDispatch();
+
+  const dismissAlert = () => {
+    if (recipientUsername === undefined) return;
+    chatDispatch({ type: "dismiss-message-alert", from: recipientUsername });
+  };
+
+  const { trackScroll } = useScrollToBottom(
+    messageHistory,
+    messagesContainerRef,
+    dismissAlert,
+  );
 
   const [message, setMessage] = useState("");
 
@@ -159,10 +200,15 @@ export default function Conversation() {
     <div className={styles.ConversationContainer}>
       <div className={styles.ConversationHistory}>
         <div className={styles.conversationHeader}>
-          <span>
+          <div className={styles.headerBack}>
+            <Back currentRecipient={recipientUsername} />
+          </div>
+          <div className={styles.headerText}>
             You're talking to <b>{recipientUsername}</b>
-          </span>
-          <Button onClick={handleEndConversation}>End conversation</Button>
+          </div>
+          <div className={styles.headerEnd}>
+            <Button onClick={handleEndConversation}>End conversation</Button>
+          </div>
         </div>
 
         <div

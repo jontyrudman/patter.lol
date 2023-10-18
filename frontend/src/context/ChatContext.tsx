@@ -1,5 +1,6 @@
 import { Dispatch, createContext, useContext, useReducer } from "react";
 import { chat } from "../api";
+import { v4 as uuid } from "uuid";
 import logger from "../utils/logger";
 
 export type ChatRequest = {
@@ -26,6 +27,10 @@ type ChatContextState = {
   requests: { [requestorName: string]: ChatRequest };
   username: string | null;
   userList: string[] | null;
+  alerts: {
+    requestFrom: Set<string>;
+    messageFrom: Set<string>;
+  }
 };
 
 type ChatDispatchActionType = keyof ChatDispatchActionMap;
@@ -39,6 +44,10 @@ const initialChats: ChatContextState = {
   requests: {},
   username: null,
   userList: null,
+  alerts: {
+    requestFrom: new Set(),
+    messageFrom: new Set(),
+  },
 };
 const chatContext = createContext<ChatContextState>(initialChats);
 const chatDispatchContext = createContext<ChatContextDispatch>(() => {});
@@ -69,9 +78,17 @@ type ChatDispatchActionMap = {
     message: string;
     recipientUsername: string;
   };
+  "dismiss-all-request-alerts": {
+    type: "dismiss-all-request-alerts";
+  };
+  "dismiss-message-alert": {
+    type: "dismiss-message-alert";
+    from: string;
+  };
   "new-request": { type: "new-request" } & ChatRequest;
   "remove-request": { type: "remove-request"; requestorUsername: string };
 };
+
 function chatReducer(
   chats: ChatContextState,
   action: ChatDispatchAction<ChatDispatchActionType>,
@@ -111,7 +128,9 @@ function chatReducer(
       };
       const conversation = chats.conversations[action.senderUsername];
       conversation.historyBuffer.push(incomingMessage);
+
       newChats.conversations[action.senderUsername] = conversation;
+      newChats.alerts.messageFrom.add(action.senderUsername);
 
       return newChats;
     }
@@ -138,6 +157,22 @@ function chatReducer(
 
       return newChats;
     }
+    case "dismiss-all-request-alerts": {
+      logger.info(
+        `Dismissing request alerts...`,
+      );
+      const newChats = { ...chats };
+      newChats.alerts.requestFrom.clear();
+      return newChats;
+    }
+    case "dismiss-message-alert": {
+      logger.info(
+        `Dismissing message alert from ${action.from}...`,
+      );
+      const newChats = { ...chats };
+      newChats.alerts.messageFrom.delete(action.from);
+      return newChats;
+    }
     case "new-request": {
       logger.info(
         `Logging new chat request from ${action.requestorUsername}...`,
@@ -148,6 +183,7 @@ function chatReducer(
         accept: action.accept,
         reject: action.reject,
       };
+      newChats.alerts.requestFrom.add(action.requestorUsername);
       return newChats;
     }
     case "remove-request": {

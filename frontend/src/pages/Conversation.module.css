@@ -32,16 +32,32 @@
 }
 
 .conversationHeader {
-  display: flex;
+  display: grid;
   gap: 1rem;
+  grid-template-areas: "back back text text text end end";
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   margin: 1rem;
+}
+
+.headerBack {
+  grid-area: back;
+  text-align: left;
+}
+
+.headerText {
+  grid-area: text;
+}
+
+.headerEnd {
+  grid-area: end;
+  text-align: right;
 }
 
 @media screen and (max-width: 40rem) {
   .conversationHeader {
-    flex-direction: column;
+    grid-template-areas: "back back back end end end end"
+                         "text text text text text text text";
     gap: 0.5rem;
     margin: 1rem 0.5rem 1.5rem 0.5rem;
   }

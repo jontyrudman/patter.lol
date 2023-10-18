@@ -4,36 +4,71 @@ import LoadingDots from "./LoadingDots";
 import { Link } from "react-router-dom";
 import Button from "./Button";
 
+function LoadingUsers() {
+  return (
+    <p className={styles.noOne}>
+      Loading users
+      <LoadingDots />
+    </p>
+  );
+}
+
+function NoOneOnline() {
+  return (
+    <p key="userlistitem_noone" className={styles.noOne}>
+      No one online right now :(
+    </p>
+  );
+}
+
+function ChatWithUser({
+  username
+}: {
+  username: string
+}) {
+  const { conversations, alerts } = useChatState();
+  const alreadyConnected = Object.keys(conversations).includes(username);
+  const alert = alreadyConnected && alerts.messageFrom.has(username);
+
+  return (
+    <div className={styles.listItem}>
+      <span>
+        <b>{username}</b>
+      </span>
+      {alreadyConnected ? (
+        <Link to={`/chat/${username}`}>
+          <Button alertDot={alert}>Return to chat</Button>
+        </Link>
+      ) : (
+        <Link to={`/request/${username}`}>
+          <Button>Connect</Button>
+        </Link>
+      )}
+    </div>
+  );
+}
+
 export default function UserList() {
-  const { userList, username } = useChatState();
+  const { userList, username: myUsername, conversations } = useChatState();
 
   return (
     <div className={styles.UserList}>
-      {userList === null && (
-        <p className={styles.noOne}>
-          Loading users
-          <LoadingDots />
-        </p>
-      )}
+      {userList === null && <LoadingUsers />}
+
+      {userList?.length === 1 && <NoOneOnline />}
+
       {userList?.map((u: string, index) => {
-        if (u === username && userList.length === 1) {
+        if (u === myUsername) {
+          return null;
+        } else {
           return (
-            <p key="userlistitem_noone" className={styles.noOne}>
-              No one online right now :(
-            </p>
+            <ChatWithUser
+              username={u}
+              openConversations={conversations}
+              key={`userlist_item_${index}`}
+            />
           );
         }
-        if (u === username) return null;
-        return (
-          <div className={styles.listItem} key={`userlistitem_${index}`}>
-            <span>
-              <b>{u}</b>
-            </span>
-            <Link to={`/request/${u}`}>
-              <Button>Connect</Button>
-            </Link>
-          </div>
-        );
       })}
     </div>
   );

@@ -3,8 +3,17 @@ import UserList from "../components/UserList";
 import Break from "../components/Break";
 import RequestList from "../components/RequestList";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useChatDispatch } from "../context";
 
 export default function Connect() {
+  const chatDispatch = useChatDispatch();
+
+  // Dismiss return-home alert on render
+  useEffect(() => {
+    chatDispatch({ type: "dismiss-all-request-alerts" });
+  }, [chatDispatch]);
+
   return (
     <div className={styles.connectContainer}>
       Who do you want to talk to?
