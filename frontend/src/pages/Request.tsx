@@ -27,8 +27,9 @@ export default function Request() {
 
     // If there's a request from this user that we haven't accepted, accept it
     if (recipientUsername in requests) {
-      requests[recipientUsername].accept();
       chatDispatch({ type: "remove-request", requestorUsername: recipientUsername });
+      requests[recipientUsername].accept();
+      return;
     }
 
     signallingSocket.on("rtc-peer-not-found", (peerUsername) => {

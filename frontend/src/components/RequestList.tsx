@@ -6,8 +6,8 @@ export default function RequestList() {
   const { requests } = useChatState();
   const chatDispatch = useChatDispatch();
   const closeWrapper = (requestorUsername: string, fn: () => void) => {
-    fn();
     chatDispatch({ type: "remove-request", requestorUsername });
+    fn();
   };
 
   if (Object.values(requests).length === 0) {
