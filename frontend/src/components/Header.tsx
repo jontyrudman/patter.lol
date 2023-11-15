@@ -3,6 +3,7 @@ import { signallingSocket } from "../api";
 import styles from "./Header.module.css";
 import LoadingDots from "./LoadingDots";
 import { useChatDispatch, useChatState } from "../context";
+import Button from "./Button";
 
 export default function Header() {
   const { username } = useChatState();

@@ -30,6 +30,25 @@ function useSignallingServerSetup() {
     signallingSocket.connect();
     rtcHandshakeSignalsOn();
 
+    if ("Notification" in window && Notification.permission === "default") {
+      const notificationDialogId = uuid();
+      dialogDispatch({
+        type: "open-dialog", dialog: {
+          id: notificationDialogId,
+          text: "Please accept or deny notification permissions.",
+          buttons: [
+            {
+              text: "Ask away!",
+              onClick: () => {
+                Notification.requestPermission();
+                dialogDispatch({ type: "close-dialog", id: notificationDialogId });
+              }
+            }
+          ]
+        }
+      });
+    }
+
     signallingSocket.on("connect_error", () => {
       const id = uuid();
       dialogDispatch({

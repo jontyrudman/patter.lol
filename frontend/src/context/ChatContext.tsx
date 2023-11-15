@@ -130,6 +130,7 @@ function chatReducer(
 
       newChats.conversations[action.senderUsername] = conversation;
       newChats.alerts.messageFrom.add(action.senderUsername);
+      new Notification("patter.lol", { body: `${action.senderUsername}: ${action.message}`, icon: "/favicon-32x32.png" });
 
       return newChats;
     }
