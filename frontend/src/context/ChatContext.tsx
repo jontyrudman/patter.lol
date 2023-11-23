@@ -132,23 +132,25 @@ function chatReducer(
       newChats.conversations[action.senderUsername] = conversation;
 
       // Notify
-      const notif = new Notification("patter.lol", {
-        body: `${action.senderUsername}: ${action.message}`,
-        icon: "/favicon-32x32.png",
-      });
+      if ("Notification" in window) {
+        const notif = new Notification("patter.lol", {
+          body: `${action.senderUsername}: ${action.message}`,
+          icon: "/favicon-32x32.png",
+        });
 
-      if (!(action.senderUsername in newChats.alerts.messages)) {
-        newChats.alerts.messages[action.senderUsername] = { notifications: [] };
-      }
+        if (!(action.senderUsername in newChats.alerts.messages)) {
+          newChats.alerts.messages[action.senderUsername] = { notifications: [] };
+        }
 
-      if ("notifications" in newChats.alerts.messages[action.senderUsername]) {
-        newChats.alerts.messages[action.senderUsername].notifications.push(
-          notif
-        );
-      } else {
-        newChats.alerts.messages[action.senderUsername] = {
-          notifications: [notif],
-        };
+        if ("notifications" in newChats.alerts.messages[action.senderUsername]) {
+          newChats.alerts.messages[action.senderUsername].notifications.push(
+            notif
+          );
+        } else {
+          newChats.alerts.messages[action.senderUsername] = {
+            notifications: [notif],
+          };
+        }
       }
 
       return newChats;
@@ -221,28 +223,31 @@ function chatReducer(
       };
 
       // Trigger notification
-      const notif = new Notification("patter.lol", {
-        body: `Message request from ${action.requestorUsername}`,
-        icon: "/favicon-32x32.png",
-      });
+      if ("Notification" in window) {
+        const notif = new Notification("patter.lol", {
+          body: `Message request from ${action.requestorUsername}`,
+          icon: "/favicon-32x32.png",
+        });
 
-      if (!(action.requestorUsername in newChats.alerts.requests)) {
-        newChats.alerts.requests[action.requestorUsername] = {
-          notifications: [],
-        };
+        if (!(action.requestorUsername in newChats.alerts.requests)) {
+          newChats.alerts.requests[action.requestorUsername] = {
+            notifications: [],
+          };
+        }
+
+        if (
+          "notifications" in newChats.alerts.requests[action.requestorUsername]
+        ) {
+          newChats.alerts.requests[action.requestorUsername].notifications.push(
+            notif
+          );
+        } else {
+          newChats.alerts.requests[action.requestorUsername] = {
+            notifications: [notif],
+          };
+        }
       }
 
-      if (
-        "notifications" in newChats.alerts.requests[action.requestorUsername]
-      ) {
-        newChats.alerts.requests[action.requestorUsername].notifications.push(
-          notif
-        );
-      } else {
-        newChats.alerts.requests[action.requestorUsername] = {
-          notifications: [notif],
-        };
-      }
       return newChats;
     }
     case "remove-request": {
