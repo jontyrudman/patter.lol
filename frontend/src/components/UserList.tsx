@@ -28,7 +28,7 @@ function ChatWithUser({
 }) {
   const { conversations, alerts } = useChatState();
   const alreadyConnected = Object.keys(conversations).includes(username);
-  const alert = alreadyConnected && alerts.messageFrom.has(username);
+  const alert = alreadyConnected && alerts.messages.hasOwnProperty(username);
 
   return (
     <div className={styles.listItem}>

@@ -27,9 +27,9 @@ type ChatContextState = {
   username: string | null;
   userList: string[] | null;
   alerts: {
-    requestFrom: Set<string>;
-    messageFrom: Set<string>;
-  }
+    requests: { [from: string]: { notifications: Notification[] } };
+    messages: { [from: string]: { notifications: Notification[] } };
+  };
 };
 
 type ChatDispatchActionType = keyof ChatDispatchActionMap;
@@ -44,8 +44,8 @@ const initialChats: ChatContextState = {
   username: null,
   userList: null,
   alerts: {
-    requestFrom: new Set(),
-    messageFrom: new Set(),
+    requests: {},
+    messages: {},
   },
 };
 const chatContext = createContext<ChatContextState>(initialChats);
@@ -90,7 +90,7 @@ type ChatDispatchActionMap = {
 
 function chatReducer(
   chats: ChatContextState,
-  action: ChatDispatchAction<ChatDispatchActionType>,
+  action: ChatDispatchAction<ChatDispatchActionType>
 ): ChatContextState {
   switch (action.type) {
     case "set-username": {
@@ -114,11 +114,13 @@ function chatReducer(
     }
     case "receive-message": {
       logger.info(
-        `New message from ${action.senderUsername}: ${action.message}`,
+        `New message from ${action.senderUsername}: ${action.message}`
       );
       if (!(action.senderUsername in chats.conversations)) {
         logger.error(`No conversation open with ${action.senderUsername}`);
       }
+
+      // Add new message to state
       const newChats = { ...chats };
       const incomingMessage: ChatMessage = {
         senderUsername: action.senderUsername,
@@ -127,10 +129,27 @@ function chatReducer(
       };
       const conversation = chats.conversations[action.senderUsername];
       conversation.historyBuffer.push(incomingMessage);
-
       newChats.conversations[action.senderUsername] = conversation;
-      newChats.alerts.messageFrom.add(action.senderUsername);
-      new Notification("patter.lol", { body: `${action.senderUsername}: ${action.message}`, icon: "/favicon-32x32.png" });
+
+      // Notify
+      const notif = new Notification("patter.lol", {
+        body: `${action.senderUsername}: ${action.message}`,
+        icon: "/favicon-32x32.png",
+      });
+
+      if (!(action.senderUsername in newChats.alerts.messages)) {
+        newChats.alerts.messages[action.senderUsername] = { notifications: [] };
+      }
+
+      if ("notifications" in newChats.alerts.messages[action.senderUsername]) {
+        newChats.alerts.messages[action.senderUsername].notifications.push(
+          notif
+        );
+      } else {
+        newChats.alerts.messages[action.senderUsername] = {
+          notifications: [notif],
+        };
+      }
 
       return newChats;
     }
@@ -152,38 +171,78 @@ function chatReducer(
 
       chatConnection.dataChannel?.send(action.message);
       newChats.conversations[action.recipientUsername].historyBuffer.push(
-        outgoingMessage,
+        outgoingMessage
       );
 
       return newChats;
     }
     case "dismiss-all-request-alerts": {
-      logger.info(
-        `Dismissing request alerts...`,
-      );
+      logger.info(`Dismissing request alerts...`);
+
+      // Close all the associated notifications
+      for (const [, { notifications }] of Object.entries(
+        chats.alerts.requests
+      )) {
+        notifications.forEach((n) => n.close());
+      }
+
       const newChats = { ...chats };
-      newChats.alerts.requestFrom.clear();
+      newChats.alerts.requests = {};
       return newChats;
     }
     case "dismiss-message-alert": {
-      logger.info(
-        `Dismissing message alert from ${action.from}...`,
-      );
+      logger.info(`Dismissing message alert from ${action.from}...`);
+
+      // Close all the associated notifications
+      if (
+        action.from in chats.alerts.messages &&
+        "notifications" in chats.alerts.messages[action.from]
+      ) {
+        chats.alerts.messages[action.from].notifications.forEach((n) =>
+          n.close()
+        );
+      }
+
       const newChats = { ...chats };
-      newChats.alerts.messageFrom.delete(action.from);
+      delete newChats.alerts.messages[action.from];
       return newChats;
     }
     case "new-request": {
       logger.info(
-        `Logging new chat request from ${action.requestorUsername}...`,
+        `Logging new chat request from ${action.requestorUsername}...`
       );
+
+      // Add new request to state
       const newChats = { ...chats };
       newChats.requests[action.requestorUsername] = {
         requestorUsername: action.requestorUsername,
         accept: action.accept,
         reject: action.reject,
       };
-      newChats.alerts.requestFrom.add(action.requestorUsername);
+
+      // Trigger notification
+      const notif = new Notification("patter.lol", {
+        body: `Message request from ${action.requestorUsername}`,
+        icon: "/favicon-32x32.png",
+      });
+
+      if (!(action.requestorUsername in newChats.alerts.requests)) {
+        newChats.alerts.requests[action.requestorUsername] = {
+          notifications: [],
+        };
+      }
+
+      if (
+        "notifications" in newChats.alerts.requests[action.requestorUsername]
+      ) {
+        newChats.alerts.requests[action.requestorUsername].notifications.push(
+          notif
+        );
+      } else {
+        newChats.alerts.requests[action.requestorUsername] = {
+          notifications: [notif],
+        };
+      }
       return newChats;
     }
     case "remove-request": {

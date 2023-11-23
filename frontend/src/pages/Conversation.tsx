@@ -62,7 +62,7 @@ function useMessageHistory(recipientUsername: string | undefined) {
 function useScrollToBottom(
   messageHistory: ChatMessage[],
   messagesContainerRef: RefObject<HTMLDivElement>,
-  dismissAlert: () => void,
+  dismissAlert: () => void
 ) {
   const chatState = useChatState();
   const atBottom = useRef(true);
@@ -71,7 +71,7 @@ function useScrollToBottom(
   const trackScroll = () => {
     if (
       (messagesContainerRef.current?.scrollTop ?? 0) +
-      (messagesContainerRef.current?.clientHeight ?? 0) ===
+        (messagesContainerRef.current?.clientHeight ?? 0) ===
       messagesContainerRef.current?.scrollHeight
     ) {
       atBottom.current = true;
@@ -103,7 +103,7 @@ function useScrollToBottom(
     };
 
     if (document.hidden) {
-      const scrollToBottomOnVisible = function() {
+      const scrollToBottomOnVisible = function () {
         if (!document.hidden && atBottom.current) {
           scrollToBottomConditional();
           document.removeEventListener(
@@ -123,28 +123,35 @@ function useScrollToBottom(
 
 function Back({ currentRecipient }: { currentRecipient?: string }) {
   const { alerts } = useChatState();
-  const newRequest = alerts.requestFrom.size > 0 && !(currentRecipient && alerts.requestFrom.has(currentRecipient) && alerts.requestFrom.size === 1);
-  const newMessage = alerts.messageFrom.size > 0 && !(currentRecipient && alerts.messageFrom.has(currentRecipient) && alerts.messageFrom.size === 1);
+
+  // Is there a new, valid request (more than one req and not the current user)?
+  const newRequest =
+    Object.keys(alerts.requests).length > 0 &&
+    !(
+      currentRecipient &&
+      alerts.requests.hasOwnProperty(currentRecipient) &&
+      Object.keys(alerts.requests).length === 1
+    );
+  // Same but for a new message
+  const newMessage =
+    Object.keys(alerts.messages).length > 0 &&
+    !(
+      currentRecipient &&
+      alerts.messages.hasOwnProperty(currentRecipient) &&
+      Object.keys(alerts.messages).length === 1
+    );
 
   let text;
-  if (newRequest)
-    text = "New request";
+  if (newRequest) text = "New request";
 
   // Messages have priority
-  if (newMessage)
-    text = "New message";
+  if (newMessage) text = "New message";
 
   return (
     <Link to="/">
       <Button alertDot={text != undefined}>
         <FontAwesomeIcon icon={faArrowLeft} />
-        {text ? (
-          <span style={{ marginLeft: '0.5rem' }}>
-            {text}
-          </span>
-        ) : (
-          null
-        )}
+        {text ? <span style={{ marginLeft: "0.5rem" }}>{text}</span> : null}
       </Button>
     </Link>
   );
@@ -166,7 +173,7 @@ export default function Conversation() {
   const { trackScroll } = useScrollToBottom(
     messageHistory,
     messagesContainerRef,
-    dismissAlert,
+    dismissAlert
   );
 
   const [message, setMessage] = useState("");
